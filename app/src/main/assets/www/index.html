@@ -157,9 +157,18 @@ body.nogray .thumb img,body.nogray .lt img,body.nogray .imgprev img{filter:none}
 .info .top{border-bottom:var(--b)}
 .info > :last-child{border-bottom:none}
 .works h3 span{font-family:Archivo;font-weight:700;font-size:12px;letter-spacing:2px;color:var(--g3)}
-.work{display:grid;grid-template-columns:44px 1fr 48px;border-bottom:2px solid var(--g1);align-items:center;text-decoration:none}
+.work{display:grid;grid-template-columns:40px 28px minmax(0,1fr) 48px;border-bottom:2px solid var(--g1);align-items:center;text-decoration:none;background:#fff;position:relative}
+.wl .work:last-child{border-bottom:none}
+.grip{display:flex;align-items:center;justify-content:center;align-self:stretch;cursor:grab;touch-action:none;color:var(--g2)}
+.grip svg{width:18px;height:18px}
+.grip:active{color:var(--ink)}
+.wl.dragging .work{transition:transform .18s cubic-bezier(.2,.8,.2,1)}
+.wl.dragging .work.drag{transition:none;z-index:3;outline:3px solid var(--ink);outline-offset:-3px;box-shadow:5px 5px 0 var(--ink)}
+.wl.dragging .work.drag .grip{color:var(--ink);cursor:grabbing}
+body.dragging{cursor:grabbing}
+body.dragging *{-webkit-user-select:none!important;user-select:none!important}
 .work:last-child{border-bottom:none}
-.work .n{font-weight:700;font-size:12px;color:var(--g2);text-align:center;letter-spacing:1px}
+.work .n{font-weight:700;font-size:12px;color:var(--g2);text-align:left;letter-spacing:1px}
 .work .t{padding:12px 8px 12px 0;font-weight:700;word-break:break-word;text-decoration:none;display:block}
 .work a.t svg.ar{margin-left:6px}
 a.t:hover{text-decoration:underline}
@@ -504,17 +513,10 @@ function renderDetail(a){
    '<div class="row">'+(l?'<a href="'+esc(l)+'" target="_blank" rel="noopener">Open link '+ARR+'</a>':'<span style="opacity:.5">No link</span>')+'<button id="edit">Edit artist</button></div>'+
    (a.note?'<div class="note"><span class="lbl">Note</span>'+esc(a.note)+'</div>':'')+
    '</div></div><div class="det works"><h3><span class="wt">Works</span><button class="wadd" id="addw">+ Add work</button></h3>'+
-   (works.length>1?'<div class="wf">'+rateOpts.map(o=>rateChip(o[0],o[1]==='Any'?'All':o[1],wfilter.rating===o[0],'data-wr')).join('')+
-      '<span class="sp"></span><button class="chip'+(wfilter.sort==='rating'?' on':'')+'" id="wsort">Sort: '+(wfilter.sort==='rating'?'Rating':'Order')+'</button></div>':'')+
-   (works.length?(()=>{
-      let ws=works.map((w,i)=>({w,i})).filter(x=>rateOk(x.w.rating,works.length>1?wfilter.rating:0));
-      if(wfilter.sort==='rating'&&works.length>1)ws.sort((x,y)=>(+y.w.rating||0)-(+x.w.rating||0)||x.i-y.i);
-      if(!ws.length)return '<div class="nowork">No works match this rating.</div>';
-      return ws.map(({w,i})=>{const wl=href(w.link);
-      return '<div class="work"><span class="n">'+pad(i+1)+'</span><div class="tw">'+
+   (works.length?'<div class="wl" id="wl">'+works.map((w,i)=>{const wl=href(w.link);
+      return '<div class="work" data-i="'+i+'">'+(works.length>1?'<span class="grip" aria-label="Drag to reorder" title="Drag to reorder">'+GRIP+'</span>':'<span></span>')+'<span class="n">'+pad(i+1)+'</span>'+
         (wl?'<a class="t" href="'+esc(wl)+'" target="_blank" rel="noopener">'+esc(w.title||'Untitled')+ARR+'</a>':'<span class="t">'+esc(w.title||'Untitled')+'</span>')+
-        starsInput(w.rating,'data-wi="'+i+'"','sm')+'</div>'+
-        '<button class="wbtn" data-w="'+i+'" title="Edit work"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square" stroke-linejoin="miter"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13 7l4 4"/></svg></button></div>';}).join('');})()
+        '<button class="wbtn" data-w="'+i+'" title="Edit work"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square" stroke-linejoin="miter"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13 7l4 4"/></svg></button></div>';}).join('')+'</div>'
      :'<div class="nowork">No works added yet.</div>')+
    '</div>';
   $('#back').onclick=()=>{location.hash='';};
@@ -527,15 +529,52 @@ function renderDetail(a){
   document.querySelectorAll('.wbtn').forEach(b=>b.onclick=()=>openEditWork(a,+b.dataset.w));
   wireStarInputs($('#app'),(g,v)=>{
     const b=g.querySelector('[data-r]');
-    if(b.hasAttribute('data-ar')){a.rating=v;}
-    else{const w=a.works[+b.dataset.wi];if(w)w.rating=v;}
+    a.rating=v;
     clearTimeout(rateT);rateT=setTimeout(()=>save(v?'Rated '+v+'★':'Rating cleared'),450);
   });
-  document.querySelectorAll('[data-wr]').forEach(b=>b.onclick=()=>{wfilter.rating=+b.dataset.wr;render();});
-  const wsb=$('#wsort');if(wsb)wsb.onclick=()=>{wfilter.sort=wfilter.sort==='rating'?'order':'rating';render();};
+  wireDrag(a);
 }
 
 let closeTop=null;
+const GRIP='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.8"/><circle cx="15" cy="6" r="1.8"/><circle cx="9" cy="12" r="1.8"/><circle cx="15" cy="12" r="1.8"/><circle cx="9" cy="18" r="1.8"/><circle cx="15" cy="18" r="1.8"/></svg>';
+// Drag the grip of a work row to reorder the artist's works.
+function wireDrag(a){
+  const wl=$('#wl');if(!wl)return;
+  wl.querySelectorAll('.grip').forEach(g=>g.onpointerdown=e=>{
+    if(e.button>0)return;e.preventDefault();
+    const row=g.closest('.work'),rows=[...wl.querySelectorAll('.work')],from=rows.indexOf(row);
+    const h=row.offsetHeight,mids=rows.map(r=>{const b=r.getBoundingClientRect();return b.top+window.scrollY+b.height/2;});
+    const startY=e.clientY+window.scrollY;let lastClientY=e.clientY,to=from,raf=0;
+    try{g.setPointerCapture(e.pointerId);}catch(_){}
+    wl.classList.add('dragging');row.classList.add('drag');document.body.classList.add('dragging');
+    if(navigator.vibrate)navigator.vibrate(15);
+    const update=()=>{
+      const y=lastClientY+window.scrollY;
+      let dy=y-startY;
+      const minDy=mids[0]-mids[from],maxDy=mids[rows.length-1]-mids[from];dy=Math.max(minDy-h/2,Math.min(maxDy+h/2,dy));
+      row.style.transform='translateY('+dy+'px)';
+      const c=mids[from]+dy;to=0;rows.forEach((r,i)=>{if(i!==from&&mids[i]<c)to++;});
+      rows.forEach((r,i)=>{if(i===from)return;let t=0;
+        if(from<to&&i>from&&i<=to)t=-h;else if(to<from&&i>=to&&i<from)t=h;
+        r.style.transform=t?'translateY('+t+'px)':'';});
+    };
+    const tick=()=>{ // auto-scroll near the screen edges
+      const edge=90;let v=0;
+      if(lastClientY<edge)v=-Math.ceil((edge-lastClientY)/8);else if(lastClientY>innerHeight-edge)v=Math.ceil((lastClientY-innerHeight+edge)/8);
+      if(v){window.scrollBy(0,v);update();}
+      raf=requestAnimationFrame(tick);
+    };
+    const move=ev=>{lastClientY=ev.clientY;update();};
+    const end=()=>{
+      cancelAnimationFrame(raf);g.removeEventListener('pointermove',move);g.removeEventListener('pointerup',end);g.removeEventListener('pointercancel',end);
+      rows.forEach(r=>r.style.transform='');wl.classList.remove('dragging');row.classList.remove('drag');document.body.classList.remove('dragging');
+      if(to!==from){const [m]=a.works.splice(from,1);a.works.splice(to,0,m);save('Order saved');}
+    };
+    g.addEventListener('pointermove',move);g.addEventListener('pointerup',end);g.addEventListener('pointercancel',end);
+    raf=requestAnimationFrame(tick);
+  });
+}
+
 function modal(title,body,foot){
   $('#layer').innerHTML='<div class="ov"><div class="modal"><div class="grab"></div><div class="mh"><h2>'+esc(title)+'</h2><button id="mx" aria-label="Close">×</button></div><div class="mb">'+body+'</div>'+(foot||'')+'</div></div>';
   const ov=$('#layer .ov');
@@ -664,17 +703,17 @@ const workFields=w=>
 function readWork(w){w.title=$('#wt').value.trim();w.link=$('#wl').value.trim();
   if(!w.title){$('#werr').innerHTML='<div class="err">Title is required.</div>';$('#wt').focus();return false;}return true;}
 function openAddWork(a){
-  const w={title:'',link:'',rating:0};
-  const close=modal('Add work — '+a.name,workFields(w)+rateField(w,'fwr'),'<div class="mf"><button id="wcn">Cancel</button><button class="pri" id="wsv">Add work</button></div>');
-  $('#wcn').onclick=close;wireRate(w,'fwr');
+  const w={title:'',link:''};
+  const close=modal('Add work — '+a.name,workFields(w),'<div class="mf"><button id="wcn">Cancel</button><button class="pri" id="wsv">Add work</button></div>');
+  $('#wcn').onclick=close;
   $('#wsv').onclick=()=>{if(!readWork(w))return;a.works=a.works||[];a.works.push(w);close();save('Work added');};
   $('#wt').onkeydown=e=>{if(e.key==='Enter')$('#wsv').click();};
   setTimeout(()=>{const e=$('#wt');if(e)e.focus();},50);
 }
 function openEditWork(a,i){
   const w=Object.assign({},a.works[i]);
-  const close=modal('Edit work',workFields(w)+rateField(w,'fwr')+'<button class="danger" id="wdel">Delete work</button>','<div class="mf"><button id="wcn">Cancel</button><button class="pri" id="wsv">Save changes</button></div>');
-  $('#wcn').onclick=close;wireRate(w,'fwr');
+  const close=modal('Edit work',workFields(w)+'<button class="danger" id="wdel">Delete work</button>','<div class="mf"><button id="wcn">Cancel</button><button class="pri" id="wsv">Save changes</button></div>');
+  $('#wcn').onclick=close;
   $('#wsv').onclick=()=>{if(!readWork(w))return;a.works[i]=w;close();save('Saved');};
   $('#wdel').onclick=()=>{close();confirmBox('Delete “'+(w.title||'work')+'”?','This removes the work from '+a.name+'.',()=>{a.works.splice(i,1);save('Work deleted');});};
 }
@@ -754,7 +793,7 @@ function openFilter(){
 
 // ---- PIN lock ----
 const LK='xarchive-lock';
-const BKSP='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true" style="transform:translateX(-1px)"><path d="M8.5 5H22v14H8.5L2 12z"/><path d="M12.75 9.25l5.5 5.5M18.25 9.25l-5.5 5.5"/></svg>';
+const BKSP='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="miter" aria-hidden="true"><path d="M9 5h12.5v14H9L2.5 12z"/><path d="M13 9.5l5 5M18 9.5l-5 5" stroke-linecap="round"/></svg>';
 function getLock(){try{return JSON.parse(localStorage.getItem(LK)||'null');}catch(e){return null;}}
 async function hashPin(salt,pin){
   const d=new TextEncoder().encode(salt+':'+pin);
