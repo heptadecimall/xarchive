@@ -99,7 +99,6 @@ svg.ar{width:.95em;height:.95em;display:inline-block;vertical-align:-.1em;flex:n
 .lx .cname{margin:0 0 4px;height:auto;display:block;white-space:nowrap;text-overflow:ellipsis;-webkit-line-clamp:unset}
 .lx .ccat{padding:0}
 .lr .go{position:static;margin-right:12px}
-.lr .ln{font-size:11px;font-weight:700;color:var(--g2);letter-spacing:1px;margin-bottom:3px}
 body.nogray .thumb img,body.nogray .lt img,body.nogray .imgprev img{filter:none}
 /* filter chips "more" */
 .chip.more{border-style:dashed;display:inline-flex;align-items:center;gap:6px}
@@ -223,7 +222,70 @@ a.t:hover{text-decoration:underline}
 header{padding-top:0px}
 .wrap{padding-bottom:calc(64px + 0px)}
 .toast{bottom:calc(18px + 0px)}
-@media (display-mode:standalone){body{-webkit-user-select:none;user-select:none}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text}}
+/* touch: no blue tap flash, no text selection on long-press, real press states */
+*{-webkit-tap-highlight-color:transparent}
+body{-webkit-user-select:none;user-select:none}
+input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text}
+a{-webkit-touch-callout:none}
+button:focus,a:focus{outline:none}
+button:focus-visible,a:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+@media (hover:none){
+  .card:hover{transform:none;box-shadow:none}
+  .go:hover{background:var(--paper);color:var(--ink)}
+  .wbtn:hover{background:none;color:inherit}
+  a.t:hover{text-decoration:none}
+  .sugg .opt:hover{background:none;color:inherit}
+}
+.card,.lr{transition:transform .12s,box-shadow .12s,opacity .12s}
+.card:active,.lr:active{transform:scale(.97)}
+.chip,.btn,.sbtn,.srow,.cta,.back,.ibtn,.mf button,.seg button,.wadd,.go,.wbtn,.row > *,.danger,.addcat button,.catline button,.mh button,.pad button,.work a.t{transition:background-color .12s,color .12s,transform .1s}
+.chip:active,.btn:active,.sbtn:active,.srow:active,.cta:active,.back:active,.ibtn:active,.mf button:active,.seg button:active,.go:active,.wbtn:active,.row > :not(span):active,.danger:active,.addcat button:active,.catline button:active{background:var(--ink);color:var(--paper);transform:scale(.97)}
+.wadd:active,.row > *:first-child:active,.btn.dark:active,.sbtn.dark:active,.mf .pri:active,.chip.on:active,.cta:active,.seg button.on:active{background:var(--g3);color:var(--paper)}
+.mh button:active{opacity:.6}
+.work a.t:active{opacity:.55}
+/* page transitions */
+@keyframes pgIn{from{opacity:0;transform:translateY(14px)}}
+@keyframes itIn{from{opacity:0;transform:translateY(18px) scale(.98)}}
+@keyframes fadeOut{to{opacity:0}}
+@keyframes downOut{to{transform:translateY(100%)}}
+#app.enter > *{animation:pgIn .32s cubic-bezier(.2,.8,.2,1) both}
+#app.enter > :nth-child(2){animation-delay:.04s}
+#app.enter > :nth-child(3){animation-delay:.08s}
+#app.enter > :nth-child(n+4){animation-delay:.12s}
+#app.enter .grid > *,#app.enter .list > *{animation:itIn .38s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(.14s + var(--i,0) * 35ms)}
+.ov.out{animation:fadeOut .2s forwards}
+.ov.out .modal{animation:downOut .2s ease-in forwards}
+/* detail image beside title */
+.th{display:flex;gap:14px;align-items:flex-start}
+.dimg{width:92px;aspect-ratio:3/4;flex:none;border:var(--b);position:relative;overflow:hidden;background:var(--g1);padding:0}
+.dimg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:grayscale(1)}
+.dimg .ph .big{font-size:38px}
+.tt{min-width:0;flex:1}
+.tt h1{margin-top:0;font-size:clamp(24px,7vw,48px)}
+body.nogray .dimg img,body.nogray .lb img{filter:none}
+.lb{position:fixed;inset:0;z-index:25;background:rgba(13,13,13,.92);display:flex;align-items:center;justify-content:center;padding:24px;animation:fade .2s}
+.lb img{max-width:100%;max-height:100%;border:3px solid var(--paper);filter:grayscale(1);animation:pgIn .25s cubic-bezier(.2,.8,.2,1)}
+.lb.out{animation:fadeOut .18s forwards}
+/* PIN lock */
+.lock{position:fixed;inset:0;z-index:50;background:var(--paper);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 24px 32px;animation:fade .2s;-webkit-user-select:none;user-select:none}
+.lock.out{animation:fadeOut .22s forwards}
+.lk-top{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:34px;text-align:center}
+.lk-top .mark b{width:44px;height:44px;font-size:28px}
+.lk-top h2{font-family:'Archivo Black';text-transform:uppercase;font-size:22px;letter-spacing:.5px;margin-top:8px}
+.lk-top p{font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--g3);min-height:15px}
+.dots{display:flex;gap:16px;margin-top:10px}
+.dots i{width:16px;height:16px;border:3px solid var(--ink);transition:background-color .1s,transform .1s}
+.dots i.on{background:var(--ink);transform:scale(1.1)}
+.dots.shake{animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-10px)}40%,80%{transform:translateX(10px)}}
+.pad{display:grid;grid-template-columns:repeat(3,76px);gap:14px}
+.pad button{height:76px;border:var(--b);background:#fff;font-family:'Archivo Black';font-size:26px;display:flex;align-items:center;justify-content:center}
+.pad button:active{background:var(--ink);color:var(--paper);transform:scale(.94)}
+.pad button.tx{font-family:Archivo;font-weight:700;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;border-color:transparent;background:none}
+.pad button.tx:active{background:none;color:var(--g3)}
+.pad button svg{width:28px;height:28px}
+.pad span{display:block}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-delay:0s!important;transition-duration:.01ms!important}}
 </style>
 <script type="application/json" id="state">{"tags":["Manga"],"artists":[],"updatedAt":0}</script>
 </head>
@@ -316,10 +378,18 @@ function filtered(){
   }).sort((x,y)=>(x.name||'').localeCompare(y.name||''));
 }
 
+let lastView=null,enterT=null;
 function render(){
   const h=location.hash.slice(1);
-  if(h.startsWith('artist-')){const a=S.artists.find(x=>x.id===h.slice(7));if(a)return renderDetail(a);}
-  renderList();
+  let a=null;
+  if(h.startsWith('artist-'))a=S.artists.find(x=>x.id===h.slice(7));
+  const view=a?'a:'+a.id:'list';
+  if(a)renderDetail(a);else renderList();
+  if(view!==lastView){
+    lastView=view;
+    const app=$('#app');app.classList.remove('enter');void app.offsetWidth;app.classList.add('enter');
+    clearTimeout(enterT);enterT=setTimeout(()=>app.classList.remove('enter'),900);
+  }
 }
 
 function renderList(){
@@ -327,27 +397,27 @@ function renderList(){
   const chips=S.tags.map(c=>'<button class="chip'+(filter.cats.includes(c)?' on':'')+'" data-cat="'+esc(c)+'">'+esc(c)+'</button>').join('');
   $('#app').innerHTML=
    (artifact||PWA?'':'<div class="notice" id="ntc" style="margin-top:20px">Saving on this device only until the page connects.</div>')+
-   '<div class="tools" style="margin-top:20px"><input id="q" type="text" placeholder="Search artist or title…" value="'+esc(filter.q)+'"><button class="btn" id="cats">Tags</button><button class="btn dark" id="add">+ Artist</button></div>'+
+   '<div class="tools" style="margin-top:20px"><input id="q" type="text" placeholder="Search artist or title…" value="'+esc(filter.q)+'"><button class="btn dark" id="add">+ Artist</button></div>'+
    '<div class="chips" id="fchips">'+(S.tags.length?'<button class="chip'+(filter.cats.length?'':' on')+'" data-all="1">All</button>'+chips+'<button class="chip more" data-more="1"></button>':'<button class="chip ghost" id="cats2">+ Add tags</button>')+'</div>'+
    '<div class="sec"><h2>Artists</h2><span>'+(filter.q||filter.cats.length?list.length+' / ':'')+S.artists.length+'</span></div>'+
    (S.artists.length===0?
      '<div class="empty"><h3>Archive is empty</h3><p>Add an artist, set the manga image you remember them by.</p><button class="cta" id="add2">+ Add first artist</button></div>':
     list.length===0?'<div class="empty"><h3>No match</h3><p>Try another name or tag.</p></div>':
     P.view==='list'?
-     '<div class="list">'+list.map(a=>{
+     '<div class="list">'+list.map((a,i)=>{
        const l=href(a.link);
-       return '<div class="lr" data-id="'+a.id+'"><div class="lt">'+thumb(a)+'</div><div class="lx"><div class="ln">'+pad(idxOf(a))+'</div><div class="cname">'+esc(a.name)+'</div><div class="ccat">'+esc((a.tags||[]).join(' · ')||'—')+'</div></div>'+(l?'<a class="go" href="'+esc(l)+'" target="_blank" rel="noopener" title="Open link">'+ARR+'</a>':'<span></span>')+'</div>';
+       return '<div class="lr" data-id="'+a.id+'" style="--i:'+Math.min(i,12)+'"><div class="lt">'+thumb(a)+'</div><div class="lx"><div class="cname">'+esc(a.name)+'</div><div class="ccat">'+esc((a.tags||[]).join(' · ')||'—')+'</div></div>'+(l?'<a class="go" href="'+esc(l)+'" target="_blank" rel="noopener" title="Open link">'+ARR+'</a>':'<span></span>')+'</div>';
      }).join('')+'</div>':
-     '<div class="grid cols'+P.cols+'">'+list.map(a=>{
+     '<div class="grid cols'+P.cols+'">'+list.map((a,i)=>{
        const l=href(a.link);
-       return '<div class="card" data-id="'+a.id+'"><div class="thumb"><span class="num">'+pad(idxOf(a))+'</span>'+(l?'<a class="go" href="'+esc(l)+'" target="_blank" rel="noopener" title="Open link">'+ARR+'</a>':'')+thumb(a)+'</div><div class="cname">'+esc(a.name)+'</div><div class="ccat">'+esc((a.tags||[]).join(' · ')||'—')+'</div></div>';
+       return '<div class="card" data-id="'+a.id+'" style="--i:'+Math.min(i,12)+'"><div class="thumb"><span class="num">'+pad(idxOf(a))+'</span>'+(l?'<a class="go" href="'+esc(l)+'" target="_blank" rel="noopener" title="Open link">'+ARR+'</a>':'')+thumb(a)+'</div><div class="cname">'+esc(a.name)+'</div><div class="ccat">'+esc((a.tags||[]).join(' · ')||'—')+'</div></div>';
      }).join('')+'</div>');
   if(artifact){const n=$('#ntc');if(n)n.remove();}
   const q=$('#q');
   q.oninput=()=>{filter.q=q.value;const p=q.selectionStart;renderList();const n=$('#q');n.focus();n.setSelectionRange(p,p);};
   $('#add').onclick=()=>openAddArtist();
   const a2=$('#add2');if(a2)a2.onclick=()=>openAddArtist();
-  $('#cats').onclick=openCats;const c2=$('#cats2');if(c2)c2.onclick=openCats;
+  const c2=$('#cats2');if(c2)c2.onclick=openCats;
   document.querySelectorAll('.chip[data-cat]').forEach(b=>b.onclick=()=>{const c=b.dataset.cat;filter.cats=filter.cats.includes(c)?filter.cats.filter(x=>x!==c):[...filter.cats,c];renderList();});
   const all=document.querySelector('.chip[data-all]');if(all)all.onclick=()=>{filter.cats=[];renderList();};
   document.querySelectorAll('#app [data-id]').forEach(c=>c.onclick=e=>{if(e.target.closest('.go'))return;location.hash='artist-'+c.dataset.id;});
@@ -380,7 +450,7 @@ function renderDetail(a){
   $('#app').innerHTML=
    '<button class="back" id="back">'+ARL+'All artists</button>'+
    '<div class="det"><div class="info">'+
-   '<div class="top"><h1>'+esc(a.name)+'</h1><div class="tags">'+(a.tags||[]).map(c=>'<span class="tag">'+esc(c)+'</span>').join('')+'</div></div>'+
+   '<div class="top"><div class="th"><button class="dimg" id="dimg" aria-label="View image">'+thumb(a)+'</button><div class="tt"><h1>'+esc(a.name)+'</h1><div class="tags">'+(a.tags||[]).map(c=>'<span class="tag">'+esc(c)+'</span>').join('')+'</div></div></div></div>'+
    '<div class="row">'+(l?'<a href="'+esc(l)+'" target="_blank" rel="noopener">Open link '+ARR+'</a>':'<span style="opacity:.5">No link</span>')+'<button id="edit">Edit artist</button></div>'+
    (a.note?'<div class="note"><span class="lbl">Note</span>'+esc(a.note)+'</div>':'')+
    '</div></div><div class="det works"><h3><span class="wt">Works</span><button class="wadd" id="addw">+ Add work</button></h3>'+
@@ -392,16 +462,24 @@ function renderDetail(a){
    '</div>';
   $('#back').onclick=()=>{location.hash='';};
   $('#edit').onclick=()=>openEditArtist(a);
+  $('#dimg').onclick=()=>{if(!a.image)return openEditArtist(a);
+    $('#layer').innerHTML='<div class="lb" id="lb"><img src="'+esc(a.image)+'" alt=""></div>';
+    closeTop=()=>{const lb=$('#lb');if(!lb)return;lb.classList.add('out');setTimeout(()=>lb.remove(),180);closeTop=null;};
+    $('#lb').onclick=()=>closeTop&&closeTop();};
   $('#addw').onclick=()=>openAddWork(a);
   document.querySelectorAll('.wbtn').forEach(b=>b.onclick=()=>openEditWork(a,+b.dataset.w));
   window.scrollTo(0,0);
 }
 
+let closeTop=null;
 function modal(title,body,foot){
-  $('#layer').innerHTML='<div class="ov"><div class="modal"><div class="grab"></div><div class="mh"><h2>'+esc(title)+'</h2><button id="mx">×</button></div><div class="mb">'+body+'</div>'+(foot||'')+'</div></div>';
-  const close=()=>{$('#layer').innerHTML='';};
+  $('#layer').innerHTML='<div class="ov"><div class="modal"><div class="grab"></div><div class="mh"><h2>'+esc(title)+'</h2><button id="mx" aria-label="Close">×</button></div><div class="mb">'+body+'</div>'+(foot||'')+'</div></div>';
+  const ov=$('#layer .ov');
+  const close=()=>{if(closeTop===close)closeTop=null;if(!ov.isConnected)return;
+    ov.querySelectorAll('[id]').forEach(e=>e.removeAttribute('id'));ov.classList.add('out');setTimeout(()=>ov.remove(),200);};
+  closeTop=close;
   $('#mx').onclick=close;
-  $('.ov').onclick=e=>{if(e.target.classList.contains('ov'))close();};
+  ov.onclick=e=>{if(e.target===ov)close();};
   return close;
 }
 
@@ -572,6 +650,8 @@ function openSettings(){
   const close=modal('Settings',
     '<div class="field"><label class="lbl">Layout</label><div class="seg">'+layouts.map(l=>'<button data-l="'+l[0]+'" class="'+(l[0]===cur?'on':'')+'">'+l[1]+l[2]+'</button>').join('')+'</div></div>'+
     '<div class="field"><label class="lbl">Display</label><button class="srow" id="sgray"><span>Grayscale images<small>Show artist images in black &amp; white</small></span><span class="tg'+(P.gray?' on':'')+'"></span></button></div>'+
+    '<div class="field"><label class="lbl">Security</label><button class="srow" id="slock"><span>App lock<small>Ask for a 4-digit PIN when the app opens</small></span><span class="tg'+(getLock()?' on':'')+'"></span></button>'+
+    '<button class="srow" id="spin"'+(getLock()?'':' style="display:none"')+'><span>Change PIN</span>'+ARR_R+'</button></div>'+
     '<div class="field"><label class="lbl">Tags</label><button class="srow" id="stags"><span>Manage tags<small>'+S.tags.length+' tags · add, rename, delete</small></span>'+ARR_R+'</button></div>'+
     '<div class="field"><label class="lbl">Data</label><button class="srow" id="sbk"><span>Backup &amp; restore<small>'+S.artists.length+' artists saved on this device</small></span>'+ARR_R+'</button></div>');
   document.querySelectorAll('.seg [data-l]').forEach(b=>b.onclick=()=>{
@@ -579,8 +659,86 @@ function openSettings(){
     document.querySelectorAll('.seg [data-l]').forEach(x=>x.classList.toggle('on',x===b));render();});
   $('#sgray').onclick=()=>{setPref('gray',!P.gray);$('#sgray .tg').classList.toggle('on',P.gray);};
   $('#stags').onclick=()=>{close();openCats();};
+  const syncLock=()=>{const on=!!getLock();const t=$('#slock .tg');if(t)t.classList.toggle('on',on);const c=$('#spin');if(c)c.style.display=on?'':'none';};
+  $('#slock').onclick=()=>{
+    if(getLock())verifyPin('Turn off lock',()=>{localStorage.removeItem(LK);syncLock();toast('App lock off');});
+    else setNewPin(()=>{syncLock();toast('App lock on');});
+  };
+  $('#spin').onclick=()=>verifyPin('Change PIN',()=>setNewPin(()=>toast('PIN changed')));
   $('#sbk').onclick=()=>{close();openBackup();};
 }
+
+// ---- PIN lock ----
+const LK='xarchive-lock';
+const BKSP='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="M8 5h13v14H8l-6-7z"/><path d="M12 9l6 6M18 9l-6 6"/></svg>';
+function getLock(){try{return JSON.parse(localStorage.getItem(LK)||'null');}catch(e){return null;}}
+async function hashPin(salt,pin){
+  const d=new TextEncoder().encode(salt+':'+pin);
+  if(window.crypto&&crypto.subtle){const h=await crypto.subtle.digest('SHA-256',d);return [...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,'0')).join('');}
+  let x=0;for(const b of d)x=(x*31+b)>>>0;return 'f'+x.toString(16);
+}
+// o: {title, sub, cancel:bool, check:async pin => true | false | {title,sub,shake}}
+function pinPad(o){
+  const el=document.createElement('div');el.className='lock';
+  el.innerHTML='<div class="lk-top"><span class="mark"><b>X</b></span><h2 class="lkt"></h2><p class="lks"></p><div class="dots"><i></i><i></i><i></i><i></i></div></div>'+
+    '<div class="pad">'+[1,2,3,4,5,6,7,8,9].map(n=>'<button data-k="'+n+'">'+n+'</button>').join('')+
+    (o.cancel?'<button class="tx" data-k="c">Cancel</button>':'<span></span>')+'<button data-k="0">0</button><button class="tx" data-k="b" aria-label="Delete">'+BKSP+'</button></div>';
+  document.body.appendChild(el);
+  const t=el.querySelector('.lkt'),sb=el.querySelector('.lks'),dots=el.querySelector('.dots');
+  t.textContent=o.title;sb.textContent=o.sub||'';
+  let v='',busy=false;
+  const upd=()=>dots.querySelectorAll('i').forEach((d,i)=>d.classList.toggle('on',i<v.length));
+  const close=()=>{document.removeEventListener('keydown',kd);el.classList.add('out');setTimeout(()=>el.remove(),220);};
+  const shake=()=>{dots.classList.remove('shake');void dots.offsetWidth;dots.classList.add('shake');if(navigator.vibrate)navigator.vibrate(60);};
+  const press=async k=>{
+    if(busy)return;
+    if(k==='c'){close();o.onCancel&&o.onCancel();return;}
+    if(k==='b'){v=v.slice(0,-1);upd();return;}
+    if(v.length>=4)return;
+    v+=k;upd();
+    if(v.length<4)return;
+    busy=true;await new Promise(r=>setTimeout(r,120));
+    const r=await o.check(v);
+    v='';upd();busy=false;
+    if(r===true){close();return;}
+    if(r&&typeof r==='object'){t.textContent=r.title||t.textContent;sb.textContent=r.sub||'';if(r.shake)shake();return;}
+    sb.textContent=o.wrong||'Wrong PIN';shake();
+  };
+  el.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>press(b.dataset.k));
+  const kd=e=>{if(/^[0-9]$/.test(e.key))press(e.key);else if(e.key==='Backspace')press('b');else if(e.key==='Escape'&&o.cancel)press('c');};
+  document.addEventListener('keydown',kd);
+  el._cancel=o.cancel?()=>press('c'):null;
+  return close;
+}
+function lockNow(){
+  const L=getLock();if(!L||document.querySelector('.lock'))return;
+  pinPad({title:'Enter PIN',sub:'XArchive is locked',check:async p=>(await hashPin(L.salt,p))===L.hash});
+}
+function setNewPin(done){
+  let first=null;
+  pinPad({title:'New PIN',sub:'Choose 4 digits',cancel:true,check:async p=>{
+    if(first===null){first=p;return {title:'Confirm PIN',sub:'Enter it again'};}
+    if(p!==first){first=null;return {title:'New PIN',sub:'PINs did not match — try again',shake:true};}
+    const salt=uid()+uid();localStorage.setItem(LK,JSON.stringify({salt,hash:await hashPin(salt,p)}));
+    done&&done(true);return true;}});
+}
+function verifyPin(title,ok){
+  const L=getLock();if(!L)return ok();
+  pinPad({title:title,sub:'Enter current PIN',cancel:true,check:async p=>{if((await hashPin(L.salt,p))!==L.hash)return false;setTimeout(ok,240);return true;}});
+}
+// lock again when coming back after a minute in the background
+let hiddenAt=0;
+document.addEventListener('visibilitychange',()=>{if(document.hidden)hiddenAt=Date.now();else if(hiddenAt&&Date.now()-hiddenAt>60000)lockNow();});
+
+// Android back button: close the top sheet / dialog, otherwise ask to quit.
+window.xaBack=function(){
+  const lk=document.querySelector('.lock:not(.out)');
+  if(lk){if(lk._cancel){lk._cancel();return true;}return false;}
+  if(closeTop){closeTop();return true;}
+  if(!window.XArchiveNative)return false;
+  confirmBox('Exit XArchive?','Close the app?',()=>XArchiveNative.exitApp(),'Exit');
+  return true;
+};
 
 function openCats(){
   const count=c=>S.artists.filter(a=>(a.tags||[]).includes(c)).length;
@@ -610,6 +768,7 @@ $('#home').onclick=()=>{filter={q:'',cats:[]};location.hash='';render();};
 window.addEventListener('hashchange',render);
 $('#menu').onclick=openSettings;
 applyPrefs();
+lockNow();
 render();
 
 if(PWA){(async()=>{try{const v=await IDB.get('state');if(v){S=mig(v);render();}if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();}catch(e){toast('Storage unavailable');}})();}

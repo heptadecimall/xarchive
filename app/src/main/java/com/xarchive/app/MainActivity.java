@@ -176,10 +176,21 @@ public class MainActivity extends Activity {
         webView.saveState(outState);
     }
 
+    // Back never navigates between pages (the app has its own buttons for that).
+    // The page closes an open sheet, or shows its "Exit XArchive?" dialog.
     @Override
     public void onBackPressed() {
-        if (webView.canGoBack()) webView.goBack();
-        else super.onBackPressed();
+        webView.evaluateJavascript(
+                "(function(){try{return window.xaBack&&window.xaBack()?1:0}catch(e){return 0}})()",
+                v -> { if (!"1".equals(v)) showQuitDialog(); });
+    }
+
+    private void showQuitDialog() {
+        new android.app.AlertDialog.Builder(this)
+                .setTitle("Exit XArchive?")
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Exit", (d, w) -> finish())
+                .show();
     }
 
     @Override
@@ -217,6 +228,11 @@ public class MainActivity extends Activity {
     }
 
     private class NativeBridge {
+        @JavascriptInterface
+        public void exitApp() {
+            runOnUiThread(MainActivity.this::finish);
+        }
+
         @JavascriptInterface
         public void copyText(String text) {
             ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
