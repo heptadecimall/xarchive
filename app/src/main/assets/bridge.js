@@ -3,6 +3,17 @@
   if (window.__xaBridge || !window.XArchiveNative) return;
   window.__xaBridge = true;
 
+  // The Android shell already keeps the page clear of the status / navigation bars,
+  // so drop viewport-fit=cover to stop the page adding the same space a second time.
+  function fixViewport() {
+    var m = document.querySelector('meta[name=viewport]');
+    if (m && /viewport-fit\s*=\s*cover/.test(m.content)) {
+      m.content = m.content.replace(/,?\s*viewport-fit\s*=\s*cover/, '');
+    }
+  }
+  fixViewport();
+  document.addEventListener('DOMContentLoaded', fixViewport);
+
   // Service workers are unnecessary inside the app (files are bundled).
   try {
     if (navigator.serviceWorker) {
