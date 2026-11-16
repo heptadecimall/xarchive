@@ -11,8 +11,18 @@
       m.content = m.content.replace(/,?\s*viewport-fit\s*=\s*cover/, '');
     }
   }
+  // Belt and braces: some WebView versions still report safe-area insets, so zero them in the CSS.
+  function zeroSafeArea() {
+    var st = document.querySelectorAll('style');
+    for (var i = 0; i < st.length; i++) {
+      var t = st[i].textContent;
+      if (t.indexOf('safe-area-inset') >= 0) {
+        st[i].textContent = t.replace(/env\(\s*safe-area-inset-[a-z]+\s*(,[^)]*)?\)/g, '0px');
+      }
+    }
+  }
   fixViewport();
-  document.addEventListener('DOMContentLoaded', fixViewport);
+  document.addEventListener('DOMContentLoaded', function () { fixViewport(); zeroSafeArea(); });
 
   // Service workers are unnecessary inside the app (files are bundled).
   try {

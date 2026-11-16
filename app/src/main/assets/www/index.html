@@ -128,7 +128,7 @@ a.t:hover{text-decoration:underline}
 .ov{position:fixed;inset:0;background:rgba(13,13,13,.55);z-index:20;display:flex;align-items:flex-end;justify-content:center;animation:fade .2s}
 @keyframes fade{from{opacity:0}}
 @keyframes up{from{transform:translateY(100%)}}
-.modal{background:var(--paper);border:var(--b);border-bottom:none;width:100%;max-width:640px;max-height:90vh;display:flex;flex-direction:column;animation:up .25s cubic-bezier(.2,.8,.2,1);padding-bottom:env(safe-area-inset-bottom)}
+.modal{background:var(--paper);border:var(--b);border-bottom:none;width:100%;max-width:640px;max-height:90vh;display:flex;flex-direction:column;animation:up .25s cubic-bezier(.2,.8,.2,1);padding-bottom:0px}
 .mb{overflow-y:auto;flex:1}
 .grab{height:18px;display:flex;justify-content:center;align-items:center;background:var(--ink)}
 .grab:before{content:'';width:44px;height:4px;background:var(--g2)}
@@ -178,9 +178,9 @@ a.t:hover{text-decoration:underline}
 .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 16px;font-weight:700;font-size:12px;letter-spacing:2px;text-transform:uppercase;z-index:30;border:2px solid var(--paper)}
 .notice{margin-top:14px;border:2px dashed var(--ink);padding:10px 12px;font-size:13px;color:var(--g3)}
 .err{color:#000;font-weight:700;font-size:13px;background:var(--g1);padding:8px 10px;border-left:6px solid var(--ink)}
-header{padding-top:env(safe-area-inset-top)}
-.wrap{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
-.toast{bottom:calc(18px + env(safe-area-inset-bottom))}
+header{padding-top:0px}
+.wrap{padding-bottom:calc(64px + 0px)}
+.toast{bottom:calc(18px + 0px)}
 @media (display-mode:standalone){body{-webkit-user-select:none;user-select:none}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text}}
 </style>
 <script type="application/json" id="state">{"tags":["Manga"],"artists":[],"updatedAt":0}</script>
