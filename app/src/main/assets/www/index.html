@@ -285,6 +285,33 @@ body.nogray .dimg img,body.nogray .lb img{filter:none}
 .pad button.tx:active{background:none;color:var(--g3)}
 .pad button svg{width:28px;height:28px}
 .pad span{display:block}
+/* ratings */
+.stars{display:inline-flex;gap:2px;align-items:center;vertical-align:middle}
+.stars svg{width:14px;height:14px;display:block}
+.stars .off{opacity:.25}
+.srate{display:flex;gap:4px;margin-top:12px}
+.srate button{width:34px;height:34px;display:flex;align-items:center;justify-content:center;padding:0}
+.srate button svg{width:28px;height:28px}
+.srate button:active{transform:scale(.85)}
+.srate.sm{gap:0;margin-top:4px}
+.srate.sm button{width:26px;height:26px}
+.srate.sm button svg{width:17px;height:17px}
+.srate .off{opacity:.22}
+.rb{position:absolute;top:0;left:0;background:var(--ink);color:var(--paper);font-weight:700;font-size:11px;letter-spacing:.5px;padding:4px 7px 4px 6px;z-index:2;display:flex;align-items:center;gap:3px;line-height:1}
+.rb svg{width:11px;height:11px}
+.cols4 .rb{font-size:9px;padding:3px 5px 3px 4px}.cols4 .rb svg{width:9px;height:9px}
+.lx .stars{margin-top:5px}.lx .stars svg{width:12px;height:12px}
+.ibtn.sq{border:none;border-left:var(--b);height:auto;width:50px;position:relative}
+.ibtn.sq.has:after{content:'';position:absolute;top:9px;right:9px;width:8px;height:8px;border-radius:50%;background:var(--ink);border:2px solid var(--paper)}
+.wf{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:10px 12px 10px 18px;border-bottom:2px solid var(--g1)}
+.wf .chip{padding:5px 9px;font-size:11px;display:inline-flex;align-items:center;gap:4px}
+.wf .chip svg,.fsheet .chip svg{width:11px;height:11px}
+.wf .sp{flex:1}
+.fsheet .chips{margin-top:0}
+.fsheet .chip{display:inline-flex;align-items:center;gap:4px}
+.work .tw{padding:8px 8px 6px 0;min-width:0}
+.work .tw .t{padding:4px 0 0}
+.work .tw .srate{margin-left:-4px}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-delay:0s!important;transition-duration:.01ms!important}}
 </style>
 <script type="application/json" id="state">{"tags":["Manga"],"artists":[],"updatedAt":0}</script>
@@ -314,6 +341,23 @@ try{Object.assign(P,JSON.parse(localStorage.getItem(PK)||'{}'));}catch(e){}
 function applyPrefs(){document.body.classList.toggle('nogray',!P.gray);document.body.style.setProperty('--cols',P.cols);}
 function setPref(k,v){P[k]=v;try{localStorage.setItem(PK,JSON.stringify(P));}catch(e){}applyPrefs();}
 let chipsOpen=false;
+const STAR_P='M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z';
+const STAR='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="'+STAR_P+'"/></svg>';
+const STAR_O='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="'+STAR_P+'"/></svg>';
+const FILTER_ICO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square" aria-hidden="true"><path d="M3 6h18M6 12h12M10 18h4"/></svg>';
+// read-only stars
+const starsView=r=>{r=+r||0;let h='';for(let i=1;i<=5;i++)h+=i<=r?STAR:'<span class="off">'+STAR_O+'</span>';return '<span class="stars" aria-label="'+r+' of 5">'+h+'</span>';};
+// tappable stars; tapping the current rating again clears it
+const starsInput=(r,attrs,cls)=>{r=+r||0;let h='';for(let i=1;i<=5;i++)h+='<button type="button" data-r="'+i+'" '+attrs+' aria-label="'+i+' star'+(i>1?'s':'')+'"'+(i<=r?'>'+STAR:' class="off">'+STAR_O)+'</button>';return '<div class="srate'+(cls?' '+cls:'')+'">'+h+'</div>';};
+const rateOpts=[[0,'Any'],[5,'5'],[4,'4+'],[3,'3+'],[2,'2+'],[1,'1+'],[-1,'Unrated']];
+const rateChip=(v,lbl,on,attr)=>'<button class="chip'+(on?' on':'')+'" '+attr+'="'+v+'">'+(v>0?STAR:'')+esc(lbl)+'</button>';
+const rateOk=(r,min)=>{r=+r||0;return min===0||(min===-1?r===0:r>=min);};
+let wfilter={rating:0,sort:'order'};
+function wireStarInputs(scope,onRate){scope.querySelectorAll('.srate').forEach(g=>{
+  g.querySelectorAll('[data-r]').forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();
+    const cur=g.querySelectorAll('[data-r]:not(.off)').length,v=+b.dataset.r,nv=v===cur?0:v;
+    g.querySelectorAll('[data-r]').forEach(x=>{const on=+x.dataset.r<=nv;x.classList.toggle('off',!on);x.innerHTML=on?STAR:STAR_O;});
+    onRate(g,nv);});});}
 const MAX_CHIP_ROWS=2;
 
 let S;
@@ -327,7 +371,7 @@ const IDB={db:null,
   open(){return this.db||(this.db=new Promise((res,rej)=>{const r=indexedDB.open('xarchive',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);}));},
   async get(k){const db=await this.open();return new Promise((res,rej)=>{const r=db.transaction('kv').objectStore('kv').get(k);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});},
   async set(k,v){const db=await this.open();return new Promise((res,rej)=>{const t=db.transaction('kv','readwrite');t.objectStore('kv').put(v,k);t.oncomplete=()=>res();t.onerror=()=>rej(t.error);});}};
-let filter={q:'',cats:[]};
+let filter={q:'',cats:[],rating:0,sort:'name'};
 const LS='xarchive-local';
 
 // local fallback: use newer local copy if the page can't save to itself
@@ -374,11 +418,16 @@ function filtered(){
   return S.artists.filter(a=>{
     if(q&&!((a.name||'').toLowerCase().includes(q)||(a.works||[]).some(w=>(w.title||'').toLowerCase().includes(q))))return false;
     if(filter.cats.length&&!filter.cats.some(c=>(a.tags||[]).includes(c)))return false;
+    if(!rateOk(a.rating,filter.rating||0))return false;
     return true;
-  }).sort((x,y)=>(x.name||'').localeCompare(y.name||''));
+  }).sort((x,y)=>{
+    const byName=(x.name||'').localeCompare(y.name||'');
+    if(filter.sort==='rating')return (+y.rating||0)-(+x.rating||0)||byName;
+    if(filter.sort==='recent')return S.artists.indexOf(y)-S.artists.indexOf(x);
+    return byName;});
 }
 
-let lastView=null,enterT=null;
+let lastView=null,enterT=null,rateT=null;
 function render(){
   const h=location.hash.slice(1);
   let a=null;
@@ -386,7 +435,7 @@ function render(){
   const view=a?'a:'+a.id:'list';
   if(a)renderDetail(a);else renderList();
   if(view!==lastView){
-    lastView=view;
+    lastView=view;window.scrollTo(0,0);
     const app=$('#app');app.classList.remove('enter');void app.offsetWidth;app.classList.add('enter');
     clearTimeout(enterT);enterT=setTimeout(()=>app.classList.remove('enter'),900);
   }
@@ -397,20 +446,20 @@ function renderList(){
   const chips=S.tags.map(c=>'<button class="chip'+(filter.cats.includes(c)?' on':'')+'" data-cat="'+esc(c)+'">'+esc(c)+'</button>').join('');
   $('#app').innerHTML=
    (artifact||PWA?'':'<div class="notice" id="ntc" style="margin-top:20px">Saving on this device only until the page connects.</div>')+
-   '<div class="tools" style="margin-top:20px"><input id="q" type="text" placeholder="Search artist or title…" value="'+esc(filter.q)+'"><button class="btn dark" id="add">+ Artist</button></div>'+
+   '<div class="tools" style="margin-top:20px"><input id="q" type="text" placeholder="Search artist or title…" value="'+esc(filter.q)+'"><button class="ibtn sq'+(filter.rating||filter.sort!=='name'?' has':'')+'" id="fbtn" aria-label="Filter and sort" title="Filter and sort">'+FILTER_ICO+'</button><button class="btn dark" id="add">+ Artist</button></div>'+
    '<div class="chips" id="fchips">'+(S.tags.length?'<button class="chip'+(filter.cats.length?'':' on')+'" data-all="1">All</button>'+chips+'<button class="chip more" data-more="1"></button>':'<button class="chip ghost" id="cats2">+ Add tags</button>')+'</div>'+
-   '<div class="sec"><h2>Artists</h2><span>'+(filter.q||filter.cats.length?list.length+' / ':'')+S.artists.length+'</span></div>'+
+   '<div class="sec"><h2>Artists</h2><span>'+(filter.q||filter.cats.length||filter.rating?list.length+' / ':'')+S.artists.length+'</span></div>'+
    (S.artists.length===0?
      '<div class="empty"><h3>Archive is empty</h3><p>Add an artist, set the manga image you remember them by.</p><button class="cta" id="add2">+ Add first artist</button></div>':
-    list.length===0?'<div class="empty"><h3>No match</h3><p>Try another name or tag.</p></div>':
+    list.length===0?'<div class="empty"><h3>No match</h3><p>Try another name, tag or rating.</p></div>':
     P.view==='list'?
      '<div class="list">'+list.map((a,i)=>{
        const l=href(a.link);
-       return '<div class="lr" data-id="'+a.id+'" style="--i:'+Math.min(i,12)+'"><div class="lt">'+thumb(a)+'</div><div class="lx"><div class="cname">'+esc(a.name)+'</div><div class="ccat">'+esc((a.tags||[]).join(' · ')||'—')+'</div></div>'+(l?'<a class="go" href="'+esc(l)+'" target="_blank" rel="noopener" title="Open link">'+ARR+'</a>':'<span></span>')+'</div>';
+       return '<div class="lr" data-id="'+a.id+'" style="--i:'+Math.min(i,12)+'"><div class="lt">'+thumb(a)+'</div><div class="lx"><div class="cname">'+esc(a.name)+'</div><div class="ccat">'+esc((a.tags||[]).join(' · ')||'—')+'</div>'+(+a.rating?starsView(a.rating):'')+'</div>'+(l?'<a class="go" href="'+esc(l)+'" target="_blank" rel="noopener" title="Open link">'+ARR+'</a>':'<span></span>')+'</div>';
      }).join('')+'</div>':
      '<div class="grid cols'+P.cols+'">'+list.map((a,i)=>{
        const l=href(a.link);
-       return '<div class="card" data-id="'+a.id+'" style="--i:'+Math.min(i,12)+'"><div class="thumb"><span class="num">'+pad(idxOf(a))+'</span>'+(l?'<a class="go" href="'+esc(l)+'" target="_blank" rel="noopener" title="Open link">'+ARR+'</a>':'')+thumb(a)+'</div><div class="cname">'+esc(a.name)+'</div><div class="ccat">'+esc((a.tags||[]).join(' · ')||'—')+'</div></div>';
+       return '<div class="card" data-id="'+a.id+'" style="--i:'+Math.min(i,12)+'"><div class="thumb">'+(+a.rating?'<span class="rb">'+STAR+a.rating+'</span>':'')+(l?'<a class="go" href="'+esc(l)+'" target="_blank" rel="noopener" title="Open link">'+ARR+'</a>':'')+thumb(a)+'</div><div class="cname">'+esc(a.name)+'</div><div class="ccat">'+esc((a.tags||[]).join(' · ')||'—')+'</div></div>';
      }).join('')+'</div>');
   if(artifact){const n=$('#ntc');if(n)n.remove();}
   const q=$('#q');
@@ -418,6 +467,7 @@ function renderList(){
   $('#add').onclick=()=>openAddArtist();
   const a2=$('#add2');if(a2)a2.onclick=()=>openAddArtist();
   const c2=$('#cats2');if(c2)c2.onclick=openCats;
+  $('#fbtn').onclick=openFilter;
   document.querySelectorAll('.chip[data-cat]').forEach(b=>b.onclick=()=>{const c=b.dataset.cat;filter.cats=filter.cats.includes(c)?filter.cats.filter(x=>x!==c):[...filter.cats,c];renderList();});
   const all=document.querySelector('.chip[data-all]');if(all)all.onclick=()=>{filter.cats=[];renderList();};
   document.querySelectorAll('#app [data-id]').forEach(c=>c.onclick=e=>{if(e.target.closest('.go'))return;location.hash='artist-'+c.dataset.id;});
@@ -450,14 +500,21 @@ function renderDetail(a){
   $('#app').innerHTML=
    '<button class="back" id="back">'+ARL+'All artists</button>'+
    '<div class="det"><div class="info">'+
-   '<div class="top"><div class="th"><button class="dimg" id="dimg" aria-label="View image">'+thumb(a)+'</button><div class="tt"><h1>'+esc(a.name)+'</h1><div class="tags">'+(a.tags||[]).map(c=>'<span class="tag">'+esc(c)+'</span>').join('')+'</div></div></div></div>'+
+   '<div class="top"><div class="th"><button class="dimg" id="dimg" aria-label="View image">'+thumb(a)+'</button><div class="tt"><h1>'+esc(a.name)+'</h1><div class="tags">'+(a.tags||[]).map(c=>'<span class="tag">'+esc(c)+'</span>').join('')+'</div>'+starsInput(a.rating,'data-ar="1"')+'</div></div></div>'+
    '<div class="row">'+(l?'<a href="'+esc(l)+'" target="_blank" rel="noopener">Open link '+ARR+'</a>':'<span style="opacity:.5">No link</span>')+'<button id="edit">Edit artist</button></div>'+
    (a.note?'<div class="note"><span class="lbl">Note</span>'+esc(a.note)+'</div>':'')+
    '</div></div><div class="det works"><h3><span class="wt">Works</span><button class="wadd" id="addw">+ Add work</button></h3>'+
-   (works.length?works.map((w,i)=>{const wl=href(w.link);
-      return '<div class="work"><span class="n">'+pad(i+1)+'</span>'+
+   (works.length>1?'<div class="wf">'+rateOpts.map(o=>rateChip(o[0],o[1]==='Any'?'All':o[1],wfilter.rating===o[0],'data-wr')).join('')+
+      '<span class="sp"></span><button class="chip'+(wfilter.sort==='rating'?' on':'')+'" id="wsort">Sort: '+(wfilter.sort==='rating'?'Rating':'Order')+'</button></div>':'')+
+   (works.length?(()=>{
+      let ws=works.map((w,i)=>({w,i})).filter(x=>rateOk(x.w.rating,works.length>1?wfilter.rating:0));
+      if(wfilter.sort==='rating'&&works.length>1)ws.sort((x,y)=>(+y.w.rating||0)-(+x.w.rating||0)||x.i-y.i);
+      if(!ws.length)return '<div class="nowork">No works match this rating.</div>';
+      return ws.map(({w,i})=>{const wl=href(w.link);
+      return '<div class="work"><span class="n">'+pad(i+1)+'</span><div class="tw">'+
         (wl?'<a class="t" href="'+esc(wl)+'" target="_blank" rel="noopener">'+esc(w.title||'Untitled')+ARR+'</a>':'<span class="t">'+esc(w.title||'Untitled')+'</span>')+
-        '<button class="wbtn" data-w="'+i+'" title="Edit work"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square" stroke-linejoin="miter"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13 7l4 4"/></svg></button></div>';}).join('')
+        starsInput(w.rating,'data-wi="'+i+'"','sm')+'</div>'+
+        '<button class="wbtn" data-w="'+i+'" title="Edit work"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square" stroke-linejoin="miter"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13 7l4 4"/></svg></button></div>';}).join('');})()
      :'<div class="nowork">No works added yet.</div>')+
    '</div>';
   $('#back').onclick=()=>{location.hash='';};
@@ -468,7 +525,14 @@ function renderDetail(a){
     $('#lb').onclick=()=>closeTop&&closeTop();};
   $('#addw').onclick=()=>openAddWork(a);
   document.querySelectorAll('.wbtn').forEach(b=>b.onclick=()=>openEditWork(a,+b.dataset.w));
-  window.scrollTo(0,0);
+  wireStarInputs($('#app'),(g,v)=>{
+    const b=g.querySelector('[data-r]');
+    if(b.hasAttribute('data-ar')){a.rating=v;}
+    else{const w=a.works[+b.dataset.wi];if(w)w.rating=v;}
+    clearTimeout(rateT);rateT=setTimeout(()=>save(v?'Rated '+v+'★':'Rating cleared'),450);
+  });
+  document.querySelectorAll('[data-wr]').forEach(b=>b.onclick=()=>{wfilter.rating=+b.dataset.wr;render();});
+  const wsb=$('#wsort');if(wsb)wsb.onclick=()=>{wfilter.sort=wfilter.sort==='rating'?'order':'rating';render();};
 }
 
 let closeTop=null;
@@ -563,16 +627,18 @@ function wireCats(d){
 const basicFields=d=>
   '<div class="field"><label class="lbl">Artist name *</label><input type="text" id="fn" value="'+esc(d.name)+'" placeholder="Artist name"></div>'+
   '<div class="field"><label class="lbl">Link</label><input type="url" id="fl" value="'+esc(d.link)+'" placeholder="Any URL"></div>';
+const rateField=(d,id)=>'<div class="field"><label class="lbl">Rating</label><div id="'+id+'">'+starsInput(d.rating,'')+'</div><span class="hint">Tap a star again to clear.</span></div>';
+function wireRate(d,id){wireStarInputs($('#'+id),(g,v)=>{d.rating=v;});}
 const noteField=d=>'<div class="field"><label class="lbl">Note</label><textarea id="fno" placeholder="Style, what to remember…">'+esc(d.note)+'</textarea></div>';
 function readBasic(d){d.name=$('#fn').value.trim();d.link=$('#fl').value.trim();d.note=$('#fno').value.trim();
   if(!d.name){$('#ferr').innerHTML='<div class="err">Artist name is required.</div>';$('#fn').focus();return false;}return true;}
 
 // ---- ADD ARTIST ----
 function openAddArtist(){
-  const d={id:uid(),name:'',link:'',image:'',tags:S.tags.includes('Manga')?['Manga']:[],note:'',works:[]};
-  const close=modal('Add artist',basicFields(d)+imageField(d)+catField()+noteField(d)+'<div id="ferr"></div>',
+  const d={id:uid(),name:'',link:'',image:'',tags:S.tags.includes('Manga')?['Manga']:[],note:'',works:[],rating:0};
+  const close=modal('Add artist',basicFields(d)+rateField(d,'far')+imageField(d)+catField()+noteField(d)+'<div id="ferr"></div>',
     '<div class="mf"><button id="fcn">Cancel</button><button class="pri" id="fsv">Add artist</button></div>');
-  const drawImg=wireImage(d,()=>$('#fn').value);wireCats(d);
+  const drawImg=wireImage(d,()=>$('#fn').value);wireCats(d);wireRate(d,'far');
   $('#fn').oninput=()=>{if(!d.image)drawImg();};
   $('#fcn').onclick=close;
   $('#fsv').onclick=()=>{if(!readBasic(d))return;S.artists.push(d);close();location.hash='artist-'+d.id;save('Artist added');};
@@ -582,9 +648,9 @@ function openAddArtist(){
 // ---- EDIT ARTIST ----
 function openEditArtist(a){
   const d=JSON.parse(JSON.stringify(a));
-  const close=modal('Edit artist',basicFields(d)+imageField(d)+catField()+noteField(d)+'<div id="ferr"></div><button class="danger" id="fdel">Delete artist</button>',
+  const close=modal('Edit artist',basicFields(d)+rateField(d,'far')+imageField(d)+catField()+noteField(d)+'<div id="ferr"></div><button class="danger" id="fdel">Delete artist</button>',
     '<div class="mf"><button id="fcn">Cancel</button><button class="pri" id="fsv">Save changes</button></div>');
-  const drawImg=wireImage(d,()=>$('#fn').value);wireCats(d);
+  const drawImg=wireImage(d,()=>$('#fn').value);wireCats(d);wireRate(d,'far');
   $('#fn').oninput=()=>{if(!d.image)drawImg();};
   $('#fcn').onclick=close;
   $('#fsv').onclick=()=>{if(!readBasic(d))return;d.works=a.works||[];const i=S.artists.findIndex(x=>x.id===a.id);S.artists[i]=d;close();save('Saved');};
@@ -598,17 +664,17 @@ const workFields=w=>
 function readWork(w){w.title=$('#wt').value.trim();w.link=$('#wl').value.trim();
   if(!w.title){$('#werr').innerHTML='<div class="err">Title is required.</div>';$('#wt').focus();return false;}return true;}
 function openAddWork(a){
-  const w={title:'',link:''};
-  const close=modal('Add work — '+a.name,workFields(w),'<div class="mf"><button id="wcn">Cancel</button><button class="pri" id="wsv">Add work</button></div>');
-  $('#wcn').onclick=close;
+  const w={title:'',link:'',rating:0};
+  const close=modal('Add work — '+a.name,workFields(w)+rateField(w,'fwr'),'<div class="mf"><button id="wcn">Cancel</button><button class="pri" id="wsv">Add work</button></div>');
+  $('#wcn').onclick=close;wireRate(w,'fwr');
   $('#wsv').onclick=()=>{if(!readWork(w))return;a.works=a.works||[];a.works.push(w);close();save('Work added');};
   $('#wt').onkeydown=e=>{if(e.key==='Enter')$('#wsv').click();};
   setTimeout(()=>{const e=$('#wt');if(e)e.focus();},50);
 }
 function openEditWork(a,i){
   const w=Object.assign({},a.works[i]);
-  const close=modal('Edit work',workFields(w)+'<button class="danger" id="wdel">Delete work</button>','<div class="mf"><button id="wcn">Cancel</button><button class="pri" id="wsv">Save changes</button></div>');
-  $('#wcn').onclick=close;
+  const close=modal('Edit work',workFields(w)+rateField(w,'fwr')+'<button class="danger" id="wdel">Delete work</button>','<div class="mf"><button id="wcn">Cancel</button><button class="pri" id="wsv">Save changes</button></div>');
+  $('#wcn').onclick=close;wireRate(w,'fwr');
   $('#wsv').onclick=()=>{if(!readWork(w))return;a.works[i]=w;close();save('Saved');};
   $('#wdel').onclick=()=>{close();confirmBox('Delete “'+(w.title||'work')+'”?','This removes the work from '+a.name+'.',()=>{a.works.splice(i,1);save('Work deleted');});};
 }
@@ -640,7 +706,7 @@ function openBackup(){
   $('#bimp').onclick=()=>{
     let o;try{o=mig(JSON.parse($('#bta').value));}catch(e){return err('That is not valid XArchive data.');}
     if(!Array.isArray(o.artists))return err('That is not valid XArchive data.');
-    confirmBox('Replace all data?','Import '+o.artists.length+' artists. Your current list will be replaced.',()=>{S=o;filter={q:'',cats:[]};location.hash='';save('Imported');},'Replace');
+    confirmBox('Replace all data?','Import '+o.artists.length+' artists. Your current list will be replaced.',()=>{S=o;filter={q:'',cats:[],rating:0,sort:'name'};location.hash='';save('Imported');},'Replace');
   };
 }
 
@@ -668,9 +734,27 @@ function openSettings(){
   $('#sbk').onclick=()=>{close();openBackup();};
 }
 
+// ---- artist filter / sort sheet ----
+function openFilter(){
+  const sorts=[['name','Name A–Z'],['rating','Rating'],['recent','Newest']];
+  const close=modal('Filter & sort','<div class="fsheet">'+
+    '<div class="field"><label class="lbl">Artist rating</label><div class="chips" id="frt"></div></div>'+
+    '<div class="field" style="margin-top:16px"><label class="lbl">Sort by</label><div class="seg" style="grid-template-columns:repeat(3,1fr)" id="fso"></div></div></div>',
+    '<div class="mf"><button id="frs">Reset</button><button class="pri" id="fdn">Done</button></div>');
+  const draw=()=>{
+    $('#frt').innerHTML=rateOpts.map(o=>rateChip(o[0],o[1],(filter.rating||0)===o[0],'data-fr')).join('');
+    $('#fso').innerHTML=sorts.map(o=>'<button data-fs="'+o[0]+'" class="'+(filter.sort===o[0]?'on':'')+'" style="padding:12px 0">'+o[1]+'</button>').join('');
+    document.querySelectorAll('[data-fr]').forEach(b=>b.onclick=()=>{filter.rating=+b.dataset.fr;draw();renderList();});
+    document.querySelectorAll('[data-fs]').forEach(b=>b.onclick=()=>{filter.sort=b.dataset.fs;draw();renderList();});
+  };
+  draw();
+  $('#frs').onclick=()=>{filter.rating=0;filter.sort='name';draw();renderList();};
+  $('#fdn').onclick=close;
+}
+
 // ---- PIN lock ----
 const LK='xarchive-lock';
-const BKSP='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="M8 5h13v14H8l-6-7z"/><path d="M12 9l6 6M18 9l-6 6"/></svg>';
+const BKSP='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true" style="transform:translateX(-1px)"><path d="M8.5 5H22v14H8.5L2 12z"/><path d="M12.75 9.25l5.5 5.5M18.25 9.25l-5.5 5.5"/></svg>';
 function getLock(){try{return JSON.parse(localStorage.getItem(LK)||'null');}catch(e){return null;}}
 async function hashPin(salt,pin){
   const d=new TextEncoder().encode(salt+':'+pin);
@@ -764,7 +848,7 @@ function openCats(){
   };
 }
 
-$('#home').onclick=()=>{filter={q:'',cats:[]};location.hash='';render();};
+$('#home').onclick=()=>{filter={q:'',cats:[],rating:0,sort:'name'};location.hash='';render();};
 window.addEventListener('hashchange',render);
 $('#menu').onclick=openSettings;
 applyPrefs();
