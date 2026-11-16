@@ -52,10 +52,17 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // WebView ignores its own padding, so it sits inside a container that
+        // is padded to keep it clear of the status bar, notch and nav bar.
+        android.widget.FrameLayout root = new android.widget.FrameLayout(this);
+        root.setBackgroundColor(0xFFF4F2EE);
         webView = new WebView(this);
         webView.setBackgroundColor(0xFFF4F2EE);
-        setContentView(webView);
-        applySystemBarInsets(webView);
+        root.addView(webView, new android.widget.FrameLayout.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT));
+        setContentView(root);
+        applySystemBarInsets(root);
 
         assetLoader = new WebViewAssetLoader.Builder()
                 .setDomain(HOST)
@@ -134,15 +141,22 @@ public class MainActivity extends Activity {
         }
     }
 
+    @SuppressWarnings("deprecation")
     private void applySystemBarInsets(View v) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            v.setOnApplyWindowInsetsListener((view, insets) -> {
-                android.graphics.Insets b = insets.getInsets(
+        v.setOnApplyWindowInsetsListener((view, insets) -> {
+            int l, t, r, b;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                android.graphics.Insets i = insets.getInsets(
                         WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout() | WindowInsets.Type.ime());
-                view.setPadding(b.left, b.top, b.right, b.bottom);
-                return WindowInsets.CONSUMED;
-            });
-        }
+                l = i.left; t = i.top; r = i.right; b = i.bottom;
+            } else {
+                l = insets.getSystemWindowInsetLeft(); t = insets.getSystemWindowInsetTop();
+                r = insets.getSystemWindowInsetRight(); b = insets.getSystemWindowInsetBottom();
+            }
+            view.setPadding(l, t, r, b);
+            return insets;
+        });
+        v.requestApplyInsets();
     }
 
     @Override
