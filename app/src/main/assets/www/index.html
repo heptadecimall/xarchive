@@ -67,27 +67,68 @@ header{border-bottom:var(--b);background:var(--paper);position:sticky;top:0;z-in
 .sec{display:flex;align-items:center;justify-content:flex-start;gap:10px;margin:28px 0 12px;border-bottom:var(--b);padding-bottom:6px}
 .sec h2{font-family:'Archivo Black';font-size:18px;text-transform:uppercase;letter-spacing:.5px}
 .sec span{background:var(--ink);color:var(--paper);font-size:12px;font-weight:700;letter-spacing:1px;padding:3px 8px;line-height:1.2}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px}
-@media (max-width:420px){.grid{grid-template-columns:1fr 1fr;gap:12px}}
-.card{border:var(--b);background:#fff;display:flex;flex-direction:column;cursor:pointer;transition:transform .12s,box-shadow .12s;position:relative}
+.grid{display:grid;grid-template-columns:repeat(var(--cols,2),minmax(0,1fr));gap:12px}
+.card{border:var(--b);background:#fff;display:flex;flex-direction:column;cursor:pointer;transition:transform .12s,box-shadow .12s;position:relative;min-width:0}
 .card:hover{transform:translate(-3px,-3px);box-shadow:6px 6px 0 var(--ink)}
-.thumb{aspect-ratio:3/4;background:var(--g1);border-bottom:var(--b);overflow:hidden;position:relative}
-.thumb img{width:100%;height:100%;object-fit:cover;display:block;filter:grayscale(1)}
+.thumb{aspect-ratio:3/4;width:100%;background:var(--g1);border-bottom:var(--b);overflow:hidden;position:relative;flex:none}
+.thumb img,.lt img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;filter:grayscale(1)}
 .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
 .ph .big{font-family:'Archivo Black';font-size:64px;color:var(--paper);mix-blend-mode:normal;position:relative;z-index:1}
 .ph .c{position:absolute;width:62%;aspect-ratio:1;border-radius:50%;background:var(--ink)}
 .ph .s{position:absolute;width:34%;aspect-ratio:1;background:var(--g2);right:8%;bottom:8%}
 .num{position:absolute;top:0;left:0;background:var(--ink);color:var(--paper);font-weight:700;font-size:11px;letter-spacing:1px;padding:4px 7px;z-index:2}
 .go{position:absolute;top:8px;right:8px;width:34px;height:34px;background:var(--paper);border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;font-weight:700;text-decoration:none;z-index:2;font-size:16px}
+.go svg{width:16px;height:16px;display:block}
+svg.ar{width:.95em;height:.95em;display:inline-block;vertical-align:-.1em;flex:none}
 .go:hover{background:var(--ink);color:var(--paper)}
-.cname{padding:10px 10px 4px;font-family:'Archivo Black';font-size:15px;text-transform:uppercase;line-height:1.1;word-break:break-word}
+.cname{margin:10px 10px 4px;font-family:'Archivo Black';font-size:15px;text-transform:uppercase;line-height:1.1;word-break:normal;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;height:2.2em;flex:none}
+.cols3 .cname{font-size:12px;margin:8px 7px 3px}
+.cols3 .ccat{padding:0 7px 8px;font-size:9px;letter-spacing:.5px}
+.cols4 .cname{font-size:10px;margin:6px 5px 2px;letter-spacing:0}
+.cols4 .ccat{padding:0 5px 6px;font-size:8px;letter-spacing:.3px}
+.cols3 .go,.cols4 .go{width:26px;height:26px;top:5px;right:5px}
+.cols3 .go svg,.cols4 .go svg{width:13px;height:13px}
+.cols4 .num{font-size:9px;padding:3px 5px}
+.cols3 .ph .big{font-size:44px}.cols4 .ph .big{font-size:32px}
+/* list view */
+.list{display:flex;flex-direction:column;gap:8px}
+.lr{display:grid;grid-template-columns:57px minmax(0,1fr) auto;align-items:center;border:var(--b);background:#fff;cursor:pointer;height:82px}
+.lt{position:relative;overflow:hidden;background:var(--g1);border-right:var(--b);height:100%}
+.lt .ph .big{font-size:26px}
+.lx{padding:0 12px;min-width:0}
+.lx .cname{margin:0 0 4px;height:auto;display:block;white-space:nowrap;text-overflow:ellipsis;-webkit-line-clamp:unset}
+.lx .ccat{padding:0}
+.lr .go{position:static;margin-right:12px}
+.lr .ln{font-size:11px;font-weight:700;color:var(--g2);letter-spacing:1px;margin-bottom:3px}
+body.nogray .thumb img,body.nogray .lt img,body.nogray .imgprev img{filter:none}
+/* filter chips "more" */
+.chip.more{border-style:dashed;display:inline-flex;align-items:center;gap:6px}
+.chip.more.has:after{content:'';width:7px;height:7px;background:var(--ink);border-radius:50%}
+/* header icon button */
+.ibtn{border:var(--b);width:42px;height:42px;display:flex;align-items:center;justify-content:center;background:var(--paper)}
+.ibtn svg{width:22px;height:22px}
+.ibtn:active{background:var(--ink);color:var(--paper)}
+/* settings */
+.seg{display:grid;grid-template-columns:repeat(4,1fr);border:var(--b);background:#fff}
+.seg button{padding:10px 0 8px;font-weight:700;font-size:11px;letter-spacing:1px;text-transform:uppercase;display:flex;flex-direction:column;align-items:center;gap:6px}
+.seg button + button{border-left:2px solid var(--ink)}
+.seg button svg{width:22px;height:22px}
+.seg button.on{background:var(--ink);color:var(--paper)}
+.srow{display:flex;width:100%;align-items:center;justify-content:space-between;gap:12px;border:var(--b);background:#fff;padding:12px 14px;font-weight:700;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;text-align:left}
+.srow + .srow{margin-top:8px}
+.srow small{display:block;font-size:11px;letter-spacing:1px;color:var(--g3);margin-top:3px;text-transform:none;font-weight:500}
+.srow > svg{width:18px;height:18px;flex:none}
+.tg{width:48px;height:28px;border:2px solid var(--ink);position:relative;background:var(--paper);flex:none}
+.tg:after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;background:var(--ink);transition:left .15s}
+.tg.on{background:var(--ink)}
+.tg.on:after{left:23px;background:var(--paper)}
 .ccat{padding:0 10px 10px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--g3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .empty{border:var(--b);border-style:dashed;padding:48px 20px;text-align:center}
 .empty h3{font-family:'Archivo Black';text-transform:uppercase;font-size:22px;margin-bottom:8px}
 .empty p{color:var(--g3);margin-bottom:16px}
 .cta{display:inline-block;border:var(--b);background:var(--ink);color:var(--paper);padding:12px 20px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;font-size:13px}
 /* detail */
-.back{margin-top:20px;font-weight:700;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;border:var(--b);padding:8px 14px;background:var(--paper)}
+.back{margin-top:20px;font-weight:700;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;border:var(--b);padding:8px 14px;background:var(--paper);display:inline-flex;align-items:center;gap:8px}
 .det{display:block;border:var(--b);margin-top:16px;background:#fff;max-width:760px}
 @media (max-width:720px){.det{grid-template-columns:1fr}}
 .det .img{border-right:var(--b);background:var(--g1);position:relative;aspect-ratio:3/4}
@@ -121,6 +162,7 @@ header{border-bottom:var(--b);background:var(--paper);position:sticky;top:0;z-in
 .work:last-child{border-bottom:none}
 .work .n{font-weight:700;font-size:12px;color:var(--g2);text-align:center;letter-spacing:1px}
 .work .t{padding:12px 8px 12px 0;font-weight:700;word-break:break-word;text-decoration:none;display:block}
+.work a.t svg.ar{margin-left:6px}
 a.t:hover{text-decoration:underline}
 .work .a{text-align:center;font-weight:700}
 .nowork{padding:18px;color:var(--g3)}
@@ -187,7 +229,7 @@ header{padding-top:0px}
 </head>
 <body>
 <header><div class="hd">
-  <a class="logo" id="home"><span class="mark"><b>X</b></span><span class="wordmark">XARCHIVE</span></a><span class="sp"></span><button class="hbtn" id="menu">Backup</button>
+  <a class="logo" id="home"><span class="mark"><b>X</b></span><span class="wordmark">XARCHIVE</span></a><span class="sp"></span><button class="ibtn" id="menu" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
 </div></header>
 <main class="wrap" id="app"></main>
 <div id="layer"></div>
@@ -198,6 +240,19 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;'
 const href=u=>{u=String(u||'').trim();if(!u)return'';if(/^javascript:/i.test(u))return'';return /^[a-z][a-z0-9+.-]*:/i.test(u)?u:'https://'+u;};
 const uid=()=>Math.random().toString(36).slice(2,9);
 const pad=n=>String(n).padStart(2,'0');
+const ARR='<svg class="ar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="M7 17L17 7"/><path d="M8 7h9v9"/></svg>';
+const ARL='<svg class="ar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="M20 12H5"/><path d="M11 5l-7 7 7 7"/></svg>';
+const ARR_R='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="M4 12h15"/><path d="M13 5l7 7-7 7"/></svg>';
+const gridIco=n=>{let r='';const g=2,w=(20-g*(n-1))/n;for(let i=0;i<n;i++)for(let j=0;j<2;j++)r+='<rect x="'+(2+i*(w+g))+'" y="'+(2+j*11)+'" width="'+w+'" height="9"/>';return '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">'+r+'</svg>';};
+const LIST_ICO='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="2" y="3" width="5" height="5"/><rect x="9" y="4" width="13" height="3"/><rect x="2" y="10" width="5" height="5"/><rect x="9" y="11" width="13" height="3"/><rect x="2" y="17" width="5" height="5"/><rect x="9" y="18" width="13" height="3"/></svg>';
+// display preferences (per device, not part of backups)
+const PK='xarchive-prefs';
+let P={view:'grid',cols:2,gray:true};
+try{Object.assign(P,JSON.parse(localStorage.getItem(PK)||'{}'));}catch(e){}
+function applyPrefs(){document.body.classList.toggle('nogray',!P.gray);document.body.style.setProperty('--cols',P.cols);}
+function setPref(k,v){P[k]=v;try{localStorage.setItem(PK,JSON.stringify(P));}catch(e){}applyPrefs();}
+let chipsOpen=false;
+const MAX_CHIP_ROWS=2;
 
 let S;
 try{S=JSON.parse($('#state').textContent);}catch(e){S={tags:[],artists:[],updatedAt:0};}
@@ -219,7 +274,7 @@ try{const l=JSON.parse(localStorage.getItem(LS)||'null');if(l&&l.updatedAt>(S.up
 function buildDoc(){
   const json=JSON.stringify(S).replace(/</g,'\\u003c');
   const js=JS.replace(/<\/script/gi,'<\\/script');
-  return '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>XArchive</title>\n<link rel="preconnect" href="https://fonts.googleapis.com">\n<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;700&display=swap" rel="stylesheet">\n<style id="css">'+CSS+'</style>\n<script type="application/json" id="state">'+json+'<\/script>\n</head>\n<body>\n<header><div class="hd">\n  <a class="logo" id="home"><span class="mark"><b>X</b></span><span class="wordmark">XARCHIVE</span></a><span class="sp"></span><button class="hbtn" id="menu">Backup</button>\n</div></header>\n<main class="wrap" id="app"></main>\n<div id="layer"></div>\n<script id="appjs">'+js+'<\/script>\n</body>\n</html>';
+  return '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>XArchive</title>\n<link rel="preconnect" href="https://fonts.googleapis.com">\n<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;700&display=swap" rel="stylesheet">\n<style id="css">'+CSS+'</style>\n<script type="application/json" id="state">'+json+'<\/script>\n</head>\n<body>\n<header><div class="hd">\n  <a class="logo" id="home"><span class="mark"><b>X</b></span><span class="wordmark">XARCHIVE</span></a><span class="sp"></span><button class="ibtn" id="menu" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>\n</div></header>\n<main class="wrap" id="app"></main>\n<div id="layer"></div>\n<script id="appjs">'+js+'<\/script>\n</body>\n</html>';
 }
 
 let saveTimer=null;
@@ -273,14 +328,19 @@ function renderList(){
   $('#app').innerHTML=
    (artifact||PWA?'':'<div class="notice" id="ntc" style="margin-top:20px">Saving on this device only until the page connects.</div>')+
    '<div class="tools" style="margin-top:20px"><input id="q" type="text" placeholder="Search artist or title…" value="'+esc(filter.q)+'"><button class="btn" id="cats">Tags</button><button class="btn dark" id="add">+ Artist</button></div>'+
-   '<div class="chips">'+(S.tags.length?'<button class="chip'+(filter.cats.length?'':' on')+'" data-all="1">All</button>'+chips:'<button class="chip ghost" id="cats2">+ Add tags</button>')+'</div>'+
+   '<div class="chips" id="fchips">'+(S.tags.length?'<button class="chip'+(filter.cats.length?'':' on')+'" data-all="1">All</button>'+chips+'<button class="chip more" data-more="1"></button>':'<button class="chip ghost" id="cats2">+ Add tags</button>')+'</div>'+
    '<div class="sec"><h2>Artists</h2><span>'+(filter.q||filter.cats.length?list.length+' / ':'')+S.artists.length+'</span></div>'+
    (S.artists.length===0?
      '<div class="empty"><h3>Archive is empty</h3><p>Add an artist, set the manga image you remember them by.</p><button class="cta" id="add2">+ Add first artist</button></div>':
     list.length===0?'<div class="empty"><h3>No match</h3><p>Try another name or tag.</p></div>':
-     '<div class="grid">'+list.map(a=>{
+    P.view==='list'?
+     '<div class="list">'+list.map(a=>{
        const l=href(a.link);
-       return '<div class="card" data-id="'+a.id+'"><div class="thumb"><span class="num">'+pad(idxOf(a))+'</span>'+(l?'<a class="go" href="'+esc(l)+'" target="_blank" rel="noopener" title="Open link">↗</a>':'')+thumb(a)+'</div><div class="cname">'+esc(a.name)+'</div><div class="ccat">'+esc((a.tags||[]).join(' · ')||'—')+'</div></div>';
+       return '<div class="lr" data-id="'+a.id+'"><div class="lt">'+thumb(a)+'</div><div class="lx"><div class="ln">'+pad(idxOf(a))+'</div><div class="cname">'+esc(a.name)+'</div><div class="ccat">'+esc((a.tags||[]).join(' · ')||'—')+'</div></div>'+(l?'<a class="go" href="'+esc(l)+'" target="_blank" rel="noopener" title="Open link">'+ARR+'</a>':'<span></span>')+'</div>';
+     }).join('')+'</div>':
+     '<div class="grid cols'+P.cols+'">'+list.map(a=>{
+       const l=href(a.link);
+       return '<div class="card" data-id="'+a.id+'"><div class="thumb"><span class="num">'+pad(idxOf(a))+'</span>'+(l?'<a class="go" href="'+esc(l)+'" target="_blank" rel="noopener" title="Open link">'+ARR+'</a>':'')+thumb(a)+'</div><div class="cname">'+esc(a.name)+'</div><div class="ccat">'+esc((a.tags||[]).join(' · ')||'—')+'</div></div>';
      }).join('')+'</div>');
   if(artifact){const n=$('#ntc');if(n)n.remove();}
   const q=$('#q');
@@ -290,21 +350,43 @@ function renderList(){
   $('#cats').onclick=openCats;const c2=$('#cats2');if(c2)c2.onclick=openCats;
   document.querySelectorAll('.chip[data-cat]').forEach(b=>b.onclick=()=>{const c=b.dataset.cat;filter.cats=filter.cats.includes(c)?filter.cats.filter(x=>x!==c):[...filter.cats,c];renderList();});
   const all=document.querySelector('.chip[data-all]');if(all)all.onclick=()=>{filter.cats=[];renderList();};
-  document.querySelectorAll('.card').forEach(c=>c.onclick=e=>{if(e.target.closest('.go'))return;location.hash='artist-'+c.dataset.id;});
+  document.querySelectorAll('#app [data-id]').forEach(c=>c.onclick=e=>{if(e.target.closest('.go'))return;location.hash='artist-'+c.dataset.id;});
+  const mo=document.querySelector('.chip[data-more]');if(mo)mo.onclick=()=>{chipsOpen=!chipsOpen;layoutChips();};
+  layoutChips();
 }
+
+// Show at most MAX_CHIP_ROWS rows of filter chips; the last slot becomes "+N more".
+function layoutChips(){
+  const box=$('#fchips'),more=box&&box.querySelector('[data-more]');if(!more)return;
+  const items=[...box.querySelectorAll('.chip:not([data-more])')];
+  items.forEach(x=>x.style.display='');more.style.display='none';
+  const tops=[...new Set(items.map(x=>x.offsetTop))].sort((a,b)=>a-b);
+  if(tops.length<=MAX_CHIP_ROWS){more.classList.remove('has');return;}
+  more.style.display='';
+  if(chipsOpen){more.textContent='Less';more.classList.remove('has');return;}
+  const limit=tops[MAX_CHIP_ROWS-1];
+  items.forEach(x=>{if(x.offsetTop>limit)x.style.display='none';});
+  more.textContent='+ More';
+  let vis=items.filter(x=>x.style.display!=='none');
+  while(more.offsetTop>limit&&vis.length>1){vis.pop().style.display='none';}
+  const hidden=items.filter(x=>x.style.display==='none');
+  more.textContent='+'+hidden.length+' more';
+  more.classList.toggle('has',hidden.some(x=>x.classList.contains('on')));
+}
+window.addEventListener('resize',()=>{if($('#fchips'))layoutChips();});
 
 function renderDetail(a){
   const l=href(a.link), works=a.works||[];
   $('#app').innerHTML=
-   '<button class="back" id="back">← All artists</button>'+
+   '<button class="back" id="back">'+ARL+'All artists</button>'+
    '<div class="det"><div class="info">'+
    '<div class="top"><h1>'+esc(a.name)+'</h1><div class="tags">'+(a.tags||[]).map(c=>'<span class="tag">'+esc(c)+'</span>').join('')+'</div></div>'+
-   '<div class="row">'+(l?'<a href="'+esc(l)+'" target="_blank" rel="noopener">Open link ↗</a>':'<span style="opacity:.5">No link</span>')+'<button id="edit">Edit artist</button></div>'+
+   '<div class="row">'+(l?'<a href="'+esc(l)+'" target="_blank" rel="noopener">Open link '+ARR+'</a>':'<span style="opacity:.5">No link</span>')+'<button id="edit">Edit artist</button></div>'+
    (a.note?'<div class="note"><span class="lbl">Note</span>'+esc(a.note)+'</div>':'')+
    '</div></div><div class="det works"><h3><span class="wt">Works</span><button class="wadd" id="addw">+ Add work</button></h3>'+
    (works.length?works.map((w,i)=>{const wl=href(w.link);
       return '<div class="work"><span class="n">'+pad(i+1)+'</span>'+
-        (wl?'<a class="t" href="'+esc(wl)+'" target="_blank" rel="noopener">'+esc(w.title||'Untitled')+' ↗</a>':'<span class="t">'+esc(w.title||'Untitled')+'</span>')+
+        (wl?'<a class="t" href="'+esc(wl)+'" target="_blank" rel="noopener">'+esc(w.title||'Untitled')+ARR+'</a>':'<span class="t">'+esc(w.title||'Untitled')+'</span>')+
         '<button class="wbtn" data-w="'+i+'" title="Edit work"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square" stroke-linejoin="miter"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13 7l4 4"/></svg></button></div>';}).join('')
      :'<div class="nowork">No works added yet.</div>')+
    '</div>';
@@ -484,6 +566,22 @@ function openBackup(){
   };
 }
 
+function openSettings(){
+  const layouts=[['g2',gridIco(2),'2 cols'],['g3',gridIco(3),'3 cols'],['g4',gridIco(4),'4 cols'],['list',LIST_ICO,'List']];
+  const cur=P.view==='list'?'list':'g'+P.cols;
+  const close=modal('Settings',
+    '<div class="field"><label class="lbl">Layout</label><div class="seg">'+layouts.map(l=>'<button data-l="'+l[0]+'" class="'+(l[0]===cur?'on':'')+'">'+l[1]+l[2]+'</button>').join('')+'</div></div>'+
+    '<div class="field"><label class="lbl">Display</label><button class="srow" id="sgray"><span>Grayscale images<small>Show artist images in black &amp; white</small></span><span class="tg'+(P.gray?' on':'')+'"></span></button></div>'+
+    '<div class="field"><label class="lbl">Tags</label><button class="srow" id="stags"><span>Manage tags<small>'+S.tags.length+' tags · add, rename, delete</small></span>'+ARR_R+'</button></div>'+
+    '<div class="field"><label class="lbl">Data</label><button class="srow" id="sbk"><span>Backup &amp; restore<small>'+S.artists.length+' artists saved on this device</small></span>'+ARR_R+'</button></div>');
+  document.querySelectorAll('.seg [data-l]').forEach(b=>b.onclick=()=>{
+    const v=b.dataset.l;if(v==='list')setPref('view','list');else{setPref('cols',+v.slice(1));setPref('view','grid');}
+    document.querySelectorAll('.seg [data-l]').forEach(x=>x.classList.toggle('on',x===b));render();});
+  $('#sgray').onclick=()=>{setPref('gray',!P.gray);$('#sgray .tg').classList.toggle('on',P.gray);};
+  $('#stags').onclick=()=>{close();openCats();};
+  $('#sbk').onclick=()=>{close();openBackup();};
+}
+
 function openCats(){
   const count=c=>S.artists.filter(a=>(a.tags||[]).includes(c)).length;
   const draft=S.tags.map(c=>({old:c,name:c}));
@@ -510,7 +608,8 @@ function openCats(){
 
 $('#home').onclick=()=>{filter={q:'',cats:[]};location.hash='';render();};
 window.addEventListener('hashchange',render);
-$('#menu').onclick=openBackup;
+$('#menu').onclick=openSettings;
+applyPrefs();
 render();
 
 if(PWA){(async()=>{try{const v=await IDB.get('state');if(v){S=mig(v);render();}if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();}catch(e){toast('Storage unavailable');}})();}
