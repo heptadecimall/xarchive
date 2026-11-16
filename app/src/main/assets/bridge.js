@@ -1,0 +1,41 @@
+// Injected by the Android shell before the page's own scripts run.
+(function () {
+  if (window.__xaBridge || !window.XArchiveNative) return;
+  window.__xaBridge = true;
+
+  // Service workers are unnecessary inside the app (files are bundled).
+  try {
+    if (navigator.serviceWorker) {
+      navigator.serviceWorker.register = function () { return Promise.resolve({}); };
+    }
+  } catch (e) {}
+
+  // Clipboard: route through the native clipboard so "Copy data" always works.
+  try {
+    var cb = navigator.clipboard || {};
+    cb.writeText = function (t) {
+      try { XArchiveNative.copyText(String(t)); return Promise.resolve(); }
+      catch (e) { return Promise.reject(e); }
+    };
+    if (!navigator.clipboard) Object.defineProperty(navigator, 'clipboard', { value: cb });
+  } catch (e) {}
+
+  // Downloads: WebView can't save blob: links, so hand the content to Android.
+  var origClick = HTMLAnchorElement.prototype.click;
+  HTMLAnchorElement.prototype.click = function () {
+    var href = this.href || '';
+    if (this.hasAttribute('download') && (href.indexOf('blob:') === 0 || href.indexOf('data:') === 0)) {
+      var name = this.getAttribute('download') || 'download';
+      fetch(href).then(function (r) { return r.blob(); }).then(function (b) {
+        var fr = new FileReader();
+        fr.onload = function () {
+          var s = String(fr.result), i = s.indexOf(',');
+          XArchiveNative.saveFile(name, b.type || 'application/octet-stream', s.slice(i + 1));
+        };
+        fr.readAsDataURL(b);
+      });
+      return;
+    }
+    return origClick.apply(this, arguments);
+  };
+})();
