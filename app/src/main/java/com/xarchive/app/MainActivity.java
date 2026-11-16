@@ -228,6 +228,47 @@ public class MainActivity extends Activity {
     }
 
     private class NativeBridge {
+        // Returns the latest copied image as a data: URL, an http(s) link if text was copied,
+        // or "" when the clipboard has no image.
+        @JavascriptInterface
+        public String getClipboardImage() {
+            try {
+                ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                if (cm == null || !cm.hasPrimaryClip()) return "";
+                ClipData clip = cm.getPrimaryClip();
+                if (clip == null) return "";
+                for (int i = 0; i < clip.getItemCount(); i++) {
+                    ClipData.Item item = clip.getItemAt(i);
+                    Uri u = item.getUri();
+                    if (u != null) {
+                        String type = getContentResolver().getType(u);
+                        if (type == null) type = "image/*";
+                        if (type.startsWith("image/")) {
+                            try (InputStream in = getContentResolver().openInputStream(u)) {
+                                ByteArrayOutputStream bo = new ByteArrayOutputStream();
+                                byte[] buf = new byte[16384];
+                                int n;
+                                while ((n = in.read(buf)) > 0) {
+                                    bo.write(buf, 0, n);
+                                    if (bo.size() > 25 * 1024 * 1024) return "";
+                                }
+                                if (type.equals("image/*")) type = "image/jpeg";
+                                return "data:" + type + ";base64," + Base64.encodeToString(bo.toByteArray(), Base64.NO_WRAP);
+                            }
+                        }
+                    }
+                    CharSequence t = item.getText();
+                    if (t != null) {
+                        String s = t.toString().trim();
+                        if (s.startsWith("http://") || s.startsWith("https://")) return s;
+                    }
+                }
+            } catch (Exception e) {
+                return "";
+            }
+            return "";
+        }
+
         @JavascriptInterface
         public void exitApp() {
             runOnUiThread(MainActivity.this::finish);

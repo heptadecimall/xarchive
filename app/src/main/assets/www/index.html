@@ -292,7 +292,11 @@ body.nogray .dimg img,body.nogray .lb img{filter:none}
 .pad button:active{background:var(--ink);color:var(--paper);transform:scale(.94)}
 .pad button.tx{font-family:Archivo;font-weight:700;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;border-color:transparent;background:none}
 .pad button.tx:active{background:none;color:var(--g3)}
-.pad button svg{width:28px;height:28px}
+.pad button svg{width:30px;height:30px}
+.pad .bk-b{display:none}
+.pad button[data-k="b"]:active .bk-a{display:none}
+.pad button[data-k="b"]:active .bk-b{display:block}
+.pad button[data-k="b"]:active{color:var(--ink);transform:scale(.94)}
 .pad span{display:block}
 /* ratings */
 .stars{display:inline-flex;gap:2px;align-items:center;vertical-align:middle}
@@ -432,7 +436,7 @@ function filtered(){
   }).sort((x,y)=>{
     const byName=(x.name||'').localeCompare(y.name||'');
     if(filter.sort==='rating')return (+y.rating||0)-(+x.rating||0)||byName;
-    if(filter.sort==='recent')return S.artists.indexOf(y)-S.artists.indexOf(x);
+    if(filter.sort==='za')return -byName;
     return byName;});
 }
 
@@ -621,7 +625,7 @@ async function toImage(file){
 function imageField(d){
   return '<div class="field"><label class="lbl">Reference image</label><div class="imgpick"><div class="imgprev" id="ip"></div><div class="imgbtns">'+
     '<button class="sbtn dark" id="fpick">Choose image</button><input type="file" accept="image/*" id="ff" class="vh">'+
-    '<div class="paste" id="fpaste" contenteditable="true">…or tap here &amp; paste an image</div>'+
+    '<button class="sbtn" id="fpaste">Paste image</button>'+
     '<button class="sbtn" id="frm">Remove</button></div></div><div id="ierr"></div></div>';
 }
 function wireImage(d,getName){
@@ -633,10 +637,25 @@ function wireImage(d,getName){
   };
   $('#fpick').onclick=e=>{e.preventDefault();$('#ff').click();};
   $('#ff').onchange=e=>{const f=e.target.files&&e.target.files[0];if(f)use(f);e.target.value='';};
-  const p=$('#fpaste');
-  p.onpaste=e=>{e.preventDefault();const it=[...(e.clipboardData&&e.clipboardData.items||[])].find(x=>x.type.startsWith('image/'));
-    if(it)use(it.getAsFile());else $('#ierr').innerHTML='<div class="err">No image on the clipboard — copy an image first.</div>';p.blur();};
-  p.oninput=()=>{p.textContent='…or tap here & paste an image';};
+  // Paste the most recently copied image (native clipboard on Android, Clipboard API elsewhere)
+  $('#fpaste').onclick=async e=>{
+    e.preventDefault();$('#ierr').innerHTML='';
+    const fail=m=>{$('#ierr').innerHTML='<div class="err">'+esc(m)+'</div>';};
+    const NO='No image on the clipboard — copy an image first.';
+    try{
+      if(window.XArchiveNative&&XArchiveNative.getClipboardImage){
+        const r=XArchiveNative.getClipboardImage()||'';
+        if(r.startsWith('data:')){const bl=await (await fetch(r)).blob();return use(new File([bl],'paste',{type:bl.type}));}
+        if(/^https?:\/\//i.test(r)){$('#ip').innerHTML='<div class="ph"><span class="hint">Loading…</span></div>';
+          if(await loadsOk(r)){d.image=r;draw();return;}draw();return fail('Copied link is not an image that can be loaded.');}
+        return fail(NO);
+      }
+      if(!navigator.clipboard||!navigator.clipboard.read)return fail('Pasting is not supported here — use Choose image.');
+      const items=await navigator.clipboard.read();
+      for(const it of items){const t=it.types.find(x=>x.startsWith('image/'));if(t){const bl=await it.getType(t);return use(new File([bl],'paste',{type:t}));}}
+      fail(NO);
+    }catch(err){fail(/denied|permission/i.test(String(err&&err.message))?'Clipboard access was blocked — allow it, or use Choose image.':NO);}
+  };
   $('#frm').onclick=e=>{e.preventDefault();d.image='';draw();};
   draw();return draw;
 }
@@ -775,7 +794,7 @@ function openSettings(){
 
 // ---- artist filter / sort sheet ----
 function openFilter(){
-  const sorts=[['name','Name A–Z'],['rating','Rating'],['recent','Newest']];
+  const sorts=[['name','Name A–Z'],['za','Name Z–A'],['rating','Rating ↓']];
   const close=modal('Filter & sort','<div class="fsheet">'+
     '<div class="field"><label class="lbl">Artist rating</label><div class="chips" id="frt"></div></div>'+
     '<div class="field" style="margin-top:16px"><label class="lbl">Sort by</label><div class="seg" style="grid-template-columns:repeat(3,1fr)" id="fso"></div></div></div>',
@@ -793,7 +812,8 @@ function openFilter(){
 
 // ---- PIN lock ----
 const LK='xarchive-lock';
-const BKSP='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="miter" aria-hidden="true"><path d="M9 5h12.5v14H9L2.5 12z"/><path d="M13 9.5l5 5M18 9.5l-5 5" stroke-linecap="round"/></svg>';
+const BKSP='<svg class="bk-a" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="miter" aria-hidden="true"><path d="M9 5h12.5v14H9L2.5 12z"/><path d="M11.25 9.75l4.5 4.5M15.75 9.75l-4.5 4.5" stroke-linecap="round"/></svg>'+
+  '<svg class="bk-b" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.9 3.9H22.6v16.2H7.9L1.4 12z" fill="currentColor"/><path d="M11.25 9.75l4.5 4.5M15.75 9.75l-4.5 4.5" stroke="var(--paper)" stroke-width="2.4" stroke-linecap="round"/></svg>';
 function getLock(){try{return JSON.parse(localStorage.getItem(LK)||'null');}catch(e){return null;}}
 async function hashPin(salt,pin){
   const d=new TextEncoder().encode(salt+':'+pin);
