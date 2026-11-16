@@ -513,7 +513,7 @@ function renderDetail(a){
    '<div class="row">'+(l?'<a href="'+esc(l)+'" target="_blank" rel="noopener">Open link '+ARR+'</a>':'<span style="opacity:.5">No link</span>')+'<button id="edit">Edit artist</button></div>'+
    (a.note?'<div class="note"><span class="lbl">Note</span>'+esc(a.note)+'</div>':'')+
    '</div></div><div class="det works"><h3><span class="wt">Works</span><button class="wadd" id="addw">+ Add work</button></h3>'+
-   (works.length?'<div class="wl" id="wl">'+works.map((w,i)=>{const wl=href(w.link);
+   (works.length?'<div class="wl" id="wlist">'+works.map((w,i)=>{const wl=href(w.link);
       return '<div class="work" data-i="'+i+'">'+(works.length>1?'<span class="grip" aria-label="Drag to reorder" title="Drag to reorder">'+GRIP+'</span>':'<span></span>')+'<span class="n">'+pad(i+1)+'</span>'+
         (wl?'<a class="t" href="'+esc(wl)+'" target="_blank" rel="noopener">'+esc(w.title||'Untitled')+ARR+'</a>':'<span class="t">'+esc(w.title||'Untitled')+'</span>')+
         '<button class="wbtn" data-w="'+i+'" title="Edit work"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square" stroke-linejoin="miter"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13 7l4 4"/></svg></button></div>';}).join('')+'</div>'
@@ -539,7 +539,7 @@ let closeTop=null;
 const GRIP='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.8"/><circle cx="15" cy="6" r="1.8"/><circle cx="9" cy="12" r="1.8"/><circle cx="15" cy="12" r="1.8"/><circle cx="9" cy="18" r="1.8"/><circle cx="15" cy="18" r="1.8"/></svg>';
 // Drag the grip of a work row to reorder the artist's works.
 function wireDrag(a){
-  const wl=$('#wl');if(!wl)return;
+  const wl=$('#wlist');if(!wl)return;
   wl.querySelectorAll('.grip').forEach(g=>g.onpointerdown=e=>{
     if(e.button>0)return;e.preventDefault();
     const row=g.closest('.work'),rows=[...wl.querySelectorAll('.work')],from=rows.indexOf(row);
