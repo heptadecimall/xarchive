@@ -12,18 +12,12 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <script>window.XA_MODE='pwa';
-window.xaIsDark=function(t){if(t==='dark')return true;if(t!=='system')return false;
-  try{if(window.XArchiveNative&&XArchiveNative.isSystemDark)return !!XArchiveNative.isSystemDark();}catch(e){}
-  return !!(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);};
-try{var _p=JSON.parse(localStorage.getItem('xarchive-prefs')||'{}');if(xaIsDark(_p.theme||'light'))document.documentElement.classList.add('dark');}catch(e){}
 </script>
 <title>XArchive</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;700&display=swap" rel="stylesheet">
 <style id="css">
 :root{--ink:#0d0d0d;--paper:#f4f2ee;--card:#fff;--g1:#d9d6d0;--g2:#9a978f;--g3:#4a4844;--scrim:rgba(13,13,13,.55);--b:3px solid var(--ink);color-scheme:light}
-html.dark{--ink:#efece6;--paper:#121211;--card:#1c1b19;--g1:#34322e;--g2:#86837b;--g3:#b4b0a8;--scrim:rgba(0,0,0,.7);color-scheme:dark}
-html.dark body.nogray .thumb img,html.dark .thumb img,html.dark .lt img,html.dark .dimg img{opacity:.92}
 html,body{transition:background-color .2s,color .2s}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{background:var(--paper);color:var(--ink);font-family:Archivo,system-ui,sans-serif}
@@ -334,8 +328,11 @@ body.nogray .dimg img,body.nogray .lb img{filter:none}
 .work .tw .t{padding:4px 0 0}
 .work .tw .srate{margin-left:-4px}
 /* dice */
-@keyframes roll{0%{transform:rotate(0) scale(1)}40%{transform:rotate(200deg) scale(.8)}100%{transform:rotate(360deg) scale(1)}}
-#dice.roll svg,#dice2.roll svg{animation:roll .45s cubic-bezier(.2,.8,.2,1)}
+.die{display:inline-flex}
+.die svg{width:22px;height:22px}
+.back .die svg{width:16px;height:16px}
+.die.roll{animation:bounce .55s cubic-bezier(.3,.7,.4,1)}
+@keyframes bounce{0%{transform:translateY(0)}18%{transform:translateY(-9px)}36%{transform:translateY(0) scale(1.15,.82)}54%{transform:translateY(-5px)}72%{transform:translateY(0) scale(1.07,.9)}86%{transform:translateY(-1px)}100%{transform:none}}
 .ibtn.sq + .ibtn.sq{border-left:var(--b)}
 .dtop{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .back svg{width:16px;height:16px;flex:none}
@@ -346,6 +343,23 @@ body.nogray .dimg img,body.nogray .lb img{filter:none}
 .tseg button{padding:5px 10px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:var(--paper)}
 .tseg button + button{border-left:2px solid var(--ink)}
 .tseg button.on{background:var(--ink);color:var(--paper)}
+/* image editor */
+.crop{position:fixed;inset:0;z-index:40;background:var(--scrim);display:flex;align-items:flex-end;justify-content:center;animation:fade .2s}
+.crop.out{animation:fadeOut .2s forwards}
+.crop-in{background:var(--paper);border:var(--b);border-bottom:none;width:100%;max-width:640px;animation:up .25s cubic-bezier(.2,.8,.2,1)}
+.crop .mh button{color:var(--paper);font-size:22px;font-weight:700;width:32px;height:32px}
+.crop-body{padding:18px 16px 16px;display:flex;flex-direction:column;align-items:center;gap:12px}
+.cframe{width:min(66vw,280px);aspect-ratio:3/4;border:var(--b);background:var(--g1);position:relative;overflow:hidden;touch-action:none;cursor:grab}
+.cframe:active{cursor:grabbing}
+.cframe img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:grayscale(1);pointer-events:none;-webkit-user-drag:none}
+body.nogray .cframe img{filter:none}
+.zrow{display:flex;align-items:center;gap:12px;width:min(80vw,320px)}
+.zrow span{font-family:'Archivo Black';font-size:20px;width:16px;text-align:center}
+.zrow input{flex:1;accent-color:var(--ink);height:28px}
+.imgprev{cursor:pointer}
+.imgprev img{position:absolute;inset:0}
+.lb img{transform:none!important}
+body.nolink .card .go,body.nolink .lr .go{display:none}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-delay:0s!important;transition-duration:.01ms!important}}
 </style>
 <script type="application/json" id="state">{"tags":["Manga"],"artists":[],"updatedAt":0}</script>
@@ -370,27 +384,17 @@ const gridIco=n=>{let r='';const g=2,w=(20-g*(n-1))/n;for(let i=0;i<n;i++)for(le
 const LIST_ICO='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="2" y="3" width="5" height="5"/><rect x="9" y="4" width="13" height="3"/><rect x="2" y="10" width="5" height="5"/><rect x="9" y="11" width="13" height="3"/><rect x="2" y="17" width="5" height="5"/><rect x="9" y="18" width="13" height="3"/></svg>';
 // display preferences (per device, not part of backups)
 const PK='xarchive-prefs';
-let P={view:'grid',cols:2,gray:true,theme:'light'};
+let P={view:'grid',cols:2,gray:true,showLink:true};
 try{Object.assign(P,JSON.parse(localStorage.getItem(PK)||'{}'));}catch(e){}
-function applyTheme(){
-  const dark=window.xaIsDark(P.theme);
-  document.documentElement.classList.toggle('dark',dark);
-  const m=document.querySelector('meta[name=theme-color]');if(m)m.content=dark?'#121211':'#f4f2ee';
-  try{if(window.XArchiveNative&&XArchiveNative.setDarkTheme)XArchiveNative.setDarkTheme(dark);}catch(e){}
-}
-function applyPrefs(){document.body.classList.toggle('nogray',!P.gray);document.body.style.setProperty('--cols',P.cols);applyTheme();}
-// follow the phone's setting when theme is "System"
-window.xaSystemThemeChanged=()=>{if(P.theme==='system')applyTheme();};
-try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>window.xaSystemThemeChanged());}catch(e){}
+function applyPrefs(){document.body.classList.toggle('nogray',!P.gray);document.body.classList.toggle('nolink',P.showLink===false);document.body.style.setProperty('--cols',P.cols);}
 function setPref(k,v){P[k]=v;try{localStorage.setItem(PK,JSON.stringify(P));}catch(e){}applyPrefs();}
 let chipsOpen=false;
 const STAR_P='M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z';
 const STAR='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="'+STAR_P+'"/></svg>';
 const STAR_O='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="'+STAR_P+'"/></svg>';
-const DICE='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4"/><g fill="currentColor"><circle cx="8" cy="8" r="1.7"/><circle cx="16" cy="8" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="8" cy="16" r="1.7"/><circle cx="16" cy="16" r="1.7"/></g></svg>';
-const SUN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1"/></svg>';
-const MOON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="miter" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/></svg>';
-const AUTO='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg>';
+const PIPS={1:[[12,12]],2:[[8,8],[16,16]],3:[[7.5,7.5],[12,12],[16.5,16.5]],4:[[8,8],[16,8],[8,16],[16,16]],5:[[8,8],[16,8],[12,12],[8,16],[16,16]],6:[[8,7],[16,7],[8,12],[16,12],[8,17],[16,17]]};
+const dieSvg=n=>'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4"/><g fill="currentColor">'+PIPS[n].map(c=>'<circle cx="'+c[0]+'" cy="'+c[1]+'" r="1.7"/>').join('')+'</g></svg>';
+const DICE='<span class="die">'+dieSvg(5)+'</span>';
 let lastRandom=null;
 // Jump to a random artist from the current search / filters.
 function rollDice(btn){
@@ -398,9 +402,13 @@ function rollDice(btn){
   if(!list.length){toast('No artists to pick from');return;}
   let pool=list.length>1?list.filter(a=>a.id!==lastRandom):list;
   const a=pool[Math.floor(Math.random()*pool.length)];lastRandom=a.id;
-  if(btn){btn.classList.remove('roll');void btn.offsetWidth;btn.classList.add('roll');}
   if(navigator.vibrate)navigator.vibrate(20);
-  setTimeout(()=>{location.hash='artist-'+a.id;},320);
+  const die=btn&&btn.querySelector('.die');
+  if(die){
+    die.classList.remove('roll');void die.offsetWidth;die.classList.add('roll');
+    let f=5,t=0;const iv=setInterval(()=>{let n;do{n=1+Math.floor(Math.random()*6);}while(n===f);f=n;die.innerHTML=dieSvg(f);if(++t>=7)clearInterval(iv);},70);
+  }
+  setTimeout(()=>{location.hash='artist-'+a.id;},560);
 }
 const FILTER_ICO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square" aria-hidden="true"><path d="M3 6h18M6 12h12M10 18h4"/></svg>';
 // read-only stars
@@ -463,8 +471,11 @@ function toast(t){
   el.textContent=t;clearTimeout(el._t);el._t=setTimeout(()=>el.remove(),2200);
 }
 
+// object-position + zoom chosen in the image editor
+function posStyle(a){const q=a&&a.pos;if(!q)return '';const x=q.x==null?50:+q.x,y=q.y==null?50:+q.y,z=+q.z||1;
+  return ' style="object-position:'+x+'% '+y+'%;transform:scale('+z+');transform-origin:'+x+'% '+y+'%"';}
 function thumb(a,i){
-  if(a.image)return '<img src="'+esc(a.image)+'" alt="">';
+  if(a.image)return '<img src="'+esc(a.image)+'" alt=""'+posStyle(a)+'>';
   const ch=(a.name||'?').trim().charAt(0).toUpperCase();
   return '<div class="ph"><div class="c"></div><div class="s"></div><span class="big">'+esc(ch)+'</span></div>';
 }
@@ -676,15 +687,17 @@ function imageField(d){
   return '<div class="field"><label class="lbl">Reference image</label><div class="imgpick"><div class="imgprev" id="ip"></div><div class="imgbtns">'+
     '<button class="sbtn dark" id="fpick">Choose image</button><input type="file" accept="image/*" id="ff" class="vh">'+
     '<button class="sbtn" id="fpaste">Paste image</button>'+
-    '<button class="sbtn" id="frm">Remove</button></div></div><div id="ierr"></div></div>';
+    '<button class="sbtn" id="fadj">Adjust</button><button class="sbtn" id="frm">Remove</button></div></div><div id="ierr"></div></div>';
 }
 function wireImage(d,getName){
-  const draw=()=>{$('#ip').innerHTML=d.image?'<img src="'+esc(d.image)+'" alt="">':thumb({name:getName()});$('#frm').style.display=d.image?'':'none';};
+  const draw=()=>{const ip=$('#ip');if(!ip)return;ip.innerHTML=d.image?thumb(d):thumb({name:getName()});$('#frm').style.display=d.image?'':'none';$('#fadj').style.display=d.image?'':'none';};
   const use=async f=>{
     $('#ierr').innerHTML='';$('#ip').innerHTML='<div class="ph"><span class="hint">Loading…</span></div>';
-    try{d.image=await toImage(f);}catch(err){$('#ierr').innerHTML='<div class="err">'+esc(err.message||'Could not use that image.')+'</div>';}
+    try{d.image=await toImage(f);d.pos=null;draw();cropEditor(d,draw);return;}catch(err){$('#ierr').innerHTML='<div class="err">'+esc(err.message||'Could not use that image.')+'</div>';}
     draw();
   };
+  $('#fadj').onclick=e=>{e.preventDefault();cropEditor(d,draw);};
+  $('#ip').onclick=()=>{if(d.image)cropEditor(d,draw);};
   $('#fpick').onclick=e=>{e.preventDefault();$('#ff').click();};
   $('#ff').onchange=e=>{const f=e.target.files&&e.target.files[0];if(f)use(f);e.target.value='';};
   // Paste the most recently copied image (native clipboard on Android, Clipboard API elsewhere)
@@ -697,7 +710,7 @@ function wireImage(d,getName){
         const r=XArchiveNative.getClipboardImage()||'';
         if(r.startsWith('data:')){const bl=await (await fetch(r)).blob();return use(new File([bl],'paste',{type:bl.type}));}
         if(/^https?:\/\//i.test(r)){$('#ip').innerHTML='<div class="ph"><span class="hint">Loading…</span></div>';
-          if(await loadsOk(r)){d.image=r;draw();return;}draw();return fail('Copied link is not an image that can be loaded.');}
+          if(await loadsOk(r)){d.image=r;d.pos=null;draw();cropEditor(d,draw);return;}draw();return fail('Copied link is not an image that can be loaded.');}
         return fail(NO);
       }
       if(!navigator.clipboard||!navigator.clipboard.read)return fail('Pasting is not supported here — use Choose image.');
@@ -706,7 +719,7 @@ function wireImage(d,getName){
       fail(NO);
     }catch(err){fail(/denied|permission/i.test(String(err&&err.message))?'Clipboard access was blocked — allow it, or use Choose image.':NO);}
   };
-  $('#frm').onclick=e=>{e.preventDefault();d.image='';draw();};
+  $('#frm').onclick=e=>{e.preventDefault();d.image='';d.pos=null;draw();};
   draw();return draw;
 }
 function catField(){return '<div class="field"><label class="lbl">Tags</label><div class="tagbox" id="tb"><div class="chips" id="fc"></div><input id="ti" type="text" autocomplete="off" placeholder="Type to find a tag…"></div><div class="sugg" id="ts"></div><span class="hint">New tags are created in the Tags menu.</span></div>';}
@@ -823,9 +836,8 @@ function openSettings(){
   const cur=P.view==='list'?'list':'g'+P.cols;
   const close=modal('Settings',
     '<div class="field"><label class="lbl">Layout</label><div class="seg">'+layouts.map(l=>'<button data-l="'+l[0]+'" class="'+(l[0]===cur?'on':'')+'">'+l[1]+l[2]+'</button>').join('')+'</div></div>'+
-    '<div class="field"><label class="lbl">Theme</label><div class="seg" id="sth" style="grid-template-columns:repeat(3,1fr)">'+
-      [['light',SUN,'Light'],['dark',MOON,'Dark'],['system',AUTO,'System']].map(t=>'<button data-th="'+t[0]+'" class="'+(P.theme===t[0]?'on':'')+'">'+t[1]+t[2]+'</button>').join('')+'</div></div>'+
-    '<div class="field"><label class="lbl">Display</label><button class="srow" id="sgray"><span>Grayscale images<small>Show artist images in black &amp; white</small></span><span class="tg'+(P.gray?' on':'')+'"></span></button></div>'+
+    '<div class="field"><label class="lbl">Display</label><button class="srow" id="sgray"><span>Grayscale images<small>Show artist images in black &amp; white</small></span><span class="tg'+(P.gray?' on':'')+'"></span></button>'+
+    '<button class="srow" id="slink"><span>Link icon on cards<small>Show the open-link button on each artist</small></span><span class="tg'+(P.showLink!==false?' on':'')+'"></span></button></div>'+
     '<div class="field"><label class="lbl">Security</label><button class="srow" id="slock"><span>App lock<small>Ask for a 4-digit PIN when the app opens</small></span><span class="tg'+(getLock()?' on':'')+'"></span></button>'+
     '<button class="srow" id="spin"'+(getLock()?'':' style="display:none"')+'><span>Change PIN</span>'+ARR_R+'</button></div>'+
     '<div class="field"><label class="lbl">Tags</label><button class="srow" id="stags"><span>Manage tags<small>'+S.tags.length+' tags · add, rename, delete</small></span>'+ARR_R+'</button></div>'+
@@ -833,8 +845,7 @@ function openSettings(){
   document.querySelectorAll('.seg [data-l]').forEach(b=>b.onclick=()=>{
     const v=b.dataset.l;if(v==='list')setPref('view','list');else{setPref('cols',+v.slice(1));setPref('view','grid');}
     document.querySelectorAll('.seg [data-l]').forEach(x=>x.classList.toggle('on',x===b));render();});
-  document.querySelectorAll('#sth [data-th]').forEach(b=>b.onclick=()=>{setPref('theme',b.dataset.th);
-    document.querySelectorAll('#sth [data-th]').forEach(x=>x.classList.toggle('on',x===b));});
+  $('#slink').onclick=()=>{setPref('showLink',P.showLink===false);$('#slink .tg').classList.toggle('on',P.showLink!==false);};
   $('#sgray').onclick=()=>{setPref('gray',!P.gray);$('#sgray .tg').classList.toggle('on',P.gray);};
   $('#stags').onclick=()=>{close();openCats();};
   const syncLock=()=>{const on=!!getLock();const t=$('#slock .tg');if(t)t.classList.toggle('on',on);const c=$('#spin');if(c)c.style.display=on?'':'none';};
@@ -844,6 +855,47 @@ function openSettings(){
   };
   $('#spin').onclick=()=>verifyPin('Change PIN',()=>setNewPin(()=>toast('PIN changed')));
   $('#sbk').onclick=()=>{close();openBackup();};
+}
+
+// ---- image editor: drag to move, pinch / slider / wheel to zoom ----
+function cropEditor(d,done){
+  if(!d.image||document.querySelector('.crop'))return;
+  const q=d.pos||{};let p={x:q.x==null?50:+q.x,y:q.y==null?50:+q.y,z:+q.z||1};
+  const el=document.createElement('div');el.className='crop';
+  el.innerHTML='<div class="crop-in"><div class="mh"><h2>Adjust image</h2><button class="cx" aria-label="Cancel">×</button></div>'+
+    '<div class="crop-body"><div class="cframe"><img alt="" draggable="false"></div>'+
+    '<p class="hint">Drag to move · pinch or slide to zoom</p>'+
+    '<div class="zrow"><span>−</span><input type="range" min="1" max="3" step="0.01" aria-label="Zoom"><span>+</span></div></div>'+
+    '<div class="mf"><button class="crs">Reset</button><button class="pri cdn">Done</button></div></div>';
+  document.body.appendChild(el);
+  const fr=el.querySelector('.cframe'),img=el.querySelector('img'),rg=el.querySelector('input');
+  img.src=d.image;
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  const apply=()=>{img.style.objectPosition=p.x+'% '+p.y+'%';img.style.transformOrigin=p.x+'% '+p.y+'%';img.style.transform='scale('+p.z+')';rg.value=p.z;};
+  const spans=()=>{const fw=fr.clientWidth,fh=fr.clientHeight,nw=img.naturalWidth||fw,nh=img.naturalHeight||fh,r=Math.max(fw/nw,fh/nh);
+    return [(nw*r-fw)*p.z+fw*(p.z-1),(nh*r-fh)*p.z+fh*(p.z-1)];};
+  const pts=new Map();let pinch=null;
+  fr.onpointerdown=e=>{e.preventDefault();try{fr.setPointerCapture(e.pointerId);}catch(_){}pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pts.size===2){const [a,b]=[...pts.values()];pinch={d:Math.hypot(a.x-b.x,a.y-b.y)||1,z:p.z};}};
+  fr.onpointermove=e=>{const prev=pts.get(e.pointerId);if(!prev)return;const cur={x:e.clientX,y:e.clientY};pts.set(e.pointerId,cur);
+    if(pts.size>=2&&pinch){const [a,b]=[...pts.values()];p.z=clamp(pinch.z*(Math.hypot(a.x-b.x,a.y-b.y)/pinch.d),1,3);apply();return;}
+    const [sx,sy]=spans();
+    if(sx>0.5)p.x=clamp(p.x-(cur.x-prev.x)/sx*100,0,100);
+    if(sy>0.5)p.y=clamp(p.y-(cur.y-prev.y)/sy*100,0,100);
+    apply();};
+  const up=e=>{pts.delete(e.pointerId);if(pts.size<2)pinch=null;};
+  fr.onpointerup=up;fr.onpointercancel=up;
+  fr.onwheel=e=>{e.preventDefault();p.z=clamp(p.z*(e.deltaY<0?1.08:1/1.08),1,3);apply();};
+  rg.oninput=()=>{p.z=+rg.value;apply();};
+  const close=()=>{el.classList.add('out');setTimeout(()=>el.remove(),200);};
+  el._cancel=close;
+  el.querySelector('.cx').onclick=close;
+  el.querySelector('.crs').onclick=()=>{p={x:50,y:50,z:1};apply();};
+  el.querySelector('.cdn').onclick=()=>{
+    const r=v=>Math.round(v*10)/10;
+    d.pos=(Math.abs(p.x-50)<0.05&&Math.abs(p.y-50)<0.05&&p.z<1.005)?null:{x:r(p.x),y:r(p.y),z:Math.round(p.z*100)/100};
+    close();done&&done();};
+  apply();
 }
 
 // ---- artist filter / sort sheet ----
@@ -932,6 +984,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)hiddenAt=Da
 
 // Android back button: close the top sheet / dialog, otherwise ask to quit.
 window.xaBack=function(){
+  const cr=document.querySelector('.crop:not(.out)');if(cr){cr._cancel();return true;}
   const lk=document.querySelector('.lock:not(.out)');
   if(lk){if(lk._cancel){lk._cancel();return true;}return false;}
   if(closeTop){closeTop();return true;}
@@ -967,6 +1020,13 @@ function openCats(){
 $('#home').onclick=()=>{filter={q:'',cats:[],rating:0,sort:'name',tagMode:'or'};location.hash='';render();};
 window.addEventListener('hashchange',render);
 $('#menu').onclick=openSettings;
+// double-tap the header to scroll back to the top
+let hdrTap=0;
+document.querySelector('header').addEventListener('click',e=>{
+  if(e.target.closest('button'))return;
+  const t=Date.now();
+  if(t-hdrTap<350){hdrTap=0;window.scrollTo({top:0,behavior:'smooth'});}else hdrTap=t;
+});
 applyPrefs();
 lockNow();
 render();

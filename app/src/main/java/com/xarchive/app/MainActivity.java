@@ -74,8 +74,7 @@ public class MainActivity extends Activity {
                     | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
         }
         applySystemBarInsets(root);
-        // Start in the last theme the page chose, so there is no flash before it loads.
-        applyBarTheme(getSharedPreferences("xa", MODE_PRIVATE).getBoolean("dark", false));
+        applyBarTheme(false);
 
         assetLoader = new WebViewAssetLoader.Builder()
                 .setDomain(HOST)
@@ -195,18 +194,6 @@ public class MainActivity extends Activity {
         }
     }
 
-    private boolean systemIsDark() {
-        return (getResources().getConfiguration().uiMode
-                & android.content.res.Configuration.UI_MODE_NIGHT_MASK)
-                == android.content.res.Configuration.UI_MODE_NIGHT_YES;
-    }
-
-    @Override
-    public void onConfigurationChanged(android.content.res.Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        if (webView != null) webView.evaluateJavascript("window.xaSystemThemeChanged&&window.xaSystemThemeChanged()", null);
-    }
-
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
@@ -304,17 +291,6 @@ public class MainActivity extends Activity {
                 return "";
             }
             return "";
-        }
-
-        @JavascriptInterface
-        public boolean isSystemDark() {
-            return systemIsDark();
-        }
-
-        @JavascriptInterface
-        public void setDarkTheme(boolean dark) {
-            getSharedPreferences("xa", MODE_PRIVATE).edit().putBoolean("dark", dark).apply();
-            runOnUiThread(() -> applyBarTheme(dark));
         }
 
         @JavascriptInterface
