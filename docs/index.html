@@ -568,11 +568,11 @@ function renderList(){
     P.view==='list'?
      '<div class="list">'+list.map((a,i)=>{
        const l=href(a.link);
-       return '<div class="lr" data-id="'+a.id+'" style="--i:'+Math.min(i,12)+'"><div class="lt">'+thumb(a)+'<span class="lnum">'+pad(idxOf(a))+'</span></div><div class="lx"><div class="cname">'+esc(a.name)+'</div><div class="ccat">'+esc((a.tags||[]).join(' · ')||'—')+'</div>'+(+a.rating?starsView(a.rating):'')+'</div>'+(l?'<a class="go" href="'+esc(l)+'" target="_blank" rel="noopener" title="Open link">'+ARR+'</a>':'<span></span>')+'</div>';
+       return '<div class="lr" data-id="'+a.id+'" style="--i:'+Math.min(i,12)+'"><div class="lt">'+thumb(a)+'<span class="lnum">'+pad(i+1)+'</span></div><div class="lx"><div class="cname">'+esc(a.name)+'</div><div class="ccat">'+esc((a.tags||[]).join(' · ')||'—')+'</div>'+(+a.rating?starsView(a.rating):'')+'</div>'+(l?'<a class="go" href="'+esc(l)+'" target="_blank" rel="noopener" title="Open link">'+ARR+'</a>':'<span></span>')+'</div>';
      }).join('')+'</div>':
      '<div class="grid cols'+P.cols+'">'+list.map((a,i)=>{
        const l=href(a.link);
-       return '<div class="card" data-id="'+a.id+'" style="--i:'+Math.min(i,12)+'"><div class="thumb"><span class="num">'+pad(idxOf(a))+'</span>'+(+a.rating?'<span class="rb">'+STAR+a.rating+'</span>':'')+(l?'<a class="go" href="'+esc(l)+'" target="_blank" rel="noopener" title="Open link">'+ARR+'</a>':'')+thumb(a)+'</div><div class="cname">'+esc(a.name)+'</div><div class="ccat">'+esc((a.tags||[]).join(' · ')||'—')+'</div></div>';
+       return '<div class="card" data-id="'+a.id+'" style="--i:'+Math.min(i,12)+'"><div class="thumb"><span class="num">'+pad(i+1)+'</span>'+(+a.rating?'<span class="rb">'+STAR+a.rating+'</span>':'')+(l?'<a class="go" href="'+esc(l)+'" target="_blank" rel="noopener" title="Open link">'+ARR+'</a>':'')+thumb(a)+'</div><div class="cname">'+esc(a.name)+'</div><div class="ccat">'+esc((a.tags||[]).join(' · ')||'—')+'</div></div>';
      }).join('')+'</div>');
   if(artifact){const n=$('#ntc');if(n)n.remove();}
   const q=$('#q');
@@ -726,7 +726,7 @@ function imageField(d){
   return '<div class="field"><label class="lbl">Images <span id="icount"></span></label><div class="imgpick"><div class="imgprev" id="ip"></div><div class="imgbtns">'+
     '<button class="sbtn dark" id="fpick">Add image</button><input type="file" accept="image/*" multiple id="ff" class="vh">'+
     '<button class="sbtn" id="fpaste">Paste image</button>'+
-    '<button class="sbtn" id="fadj">Adjust</button><button class="sbtn" id="fcov">Set as cover</button><button class="sbtn" id="frm">Remove</button></div></div>'+
+    '<button class="sbtn" id="fadj">Adjust</button><button class="sbtn" id="frm">Remove</button></div></div>'+
     '<div class="istrip" id="istrip"></div><span class="hint" id="ihint"></span><div id="ierr"></div></div>';
 }
 function wireImage(d,getName){
@@ -738,9 +738,8 @@ function wireImage(d,getName){
     const n=d.images.length,cur=d.images[sel];
     ip.innerHTML=cur?thumb({image:cur.src,pos:cur.pos}):thumb({name:getName()});
     $('#fadj').style.display=cur?'':'none';$('#frm').style.display=cur?'':'none';
-    $('#fcov').style.display=cur&&sel!==n-1?'':'none';
     $('#icount').textContent=n>1?'('+n+')':'';
-    $('#ihint').textContent=n>1?'The last image is the cover shown on cards. Tap a thumbnail to select it.':'';
+    $('#ihint').textContent=n>1?'The last image added is the cover shown on cards. Tap a thumbnail to adjust or remove it.':'';
     $('#istrip').innerHTML=n>1?d.images.map((im,k)=>'<button class="ist'+(k===sel?' on':'')+'" data-s="'+k+'"><img src="'+esc(im.src)+'" alt=""'+posStyle(im)+'>'+(k===n-1?'<b>Cover</b>':'')+'</button>').join(''):'';
     $('#istrip').querySelectorAll('[data-s]').forEach(b=>b.onclick=e=>{e.preventDefault();sel=+b.dataset.s;draw();});
     const st=$('#istrip .ist.on');if(st)st.scrollIntoView({block:'nearest',inline:'nearest'});
@@ -758,7 +757,6 @@ function wireImage(d,getName){
   $('#ff').onchange=e=>{const fs=[...(e.target.files||[])];if(fs.length)use(fs);e.target.value='';};
   $('#fadj').onclick=e=>{e.preventDefault();adjust();};
   $('#ip').onclick=()=>adjust();
-  $('#fcov').onclick=e=>{e.preventDefault();const [m]=d.images.splice(sel,1);d.images.push(m);sel=d.images.length-1;draw();toast('Cover set');};
   $('#frm').onclick=e=>{e.preventDefault();d.images.splice(sel,1);sel=Math.min(sel,d.images.length-1);draw();};
   // Paste the most recently copied image (native clipboard on Android, Clipboard API elsewhere)
   $('#fpaste').onclick=async e=>{
