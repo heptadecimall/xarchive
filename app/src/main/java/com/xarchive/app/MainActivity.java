@@ -43,6 +43,8 @@ public class MainActivity extends Activity {
     private static final int REQ_SAVE_FILE = 2;
 
     private WebView webView;
+    private android.widget.FrameLayout root;
+    private static final int LIGHT_BG = 0xFFF4F2EE, DARK_BG = 0xFF121211;
     private WebViewAssetLoader assetLoader;
     private ValueCallback<Uri[]> fileCallback;
     private byte[] pendingSave;
@@ -55,10 +57,8 @@ public class MainActivity extends Activity {
 
         // WebView ignores its own padding, so it sits inside a container that
         // is padded to keep it clear of the status bar, notch and nav bar.
-        android.widget.FrameLayout root = new android.widget.FrameLayout(this);
-        root.setBackgroundColor(0xFFF4F2EE);
+        root = new android.widget.FrameLayout(this);
         webView = new WebView(this);
-        webView.setBackgroundColor(0xFFF4F2EE);
         root.addView(webView, new android.widget.FrameLayout.LayoutParams(
                 android.view.ViewGroup.LayoutParams.MATCH_PARENT,
                 android.view.ViewGroup.LayoutParams.MATCH_PARENT));
@@ -74,6 +74,8 @@ public class MainActivity extends Activity {
                     | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
         }
         applySystemBarInsets(root);
+        // Start in the last theme the page chose, so there is no flash before it loads.
+        applyBarTheme(getSharedPreferences("xa", MODE_PRIVATE).getBoolean("dark", false));
 
         assetLoader = new WebViewAssetLoader.Builder()
                 .setDomain(HOST)
@@ -168,6 +170,41 @@ public class MainActivity extends Activity {
             return insets;
         });
         v.requestApplyInsets();
+    }
+
+    // Colours the area behind the status / navigation bars and picks light or dark bar icons.
+    @SuppressWarnings("deprecation")
+    private void applyBarTheme(boolean dark) {
+        int bg = dark ? DARK_BG : LIGHT_BG;
+        root.setBackgroundColor(bg);
+        webView.setBackgroundColor(bg);
+        getWindow().setStatusBarColor(bg);
+        getWindow().setNavigationBarColor(bg);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            android.view.WindowInsetsController c = getWindow().getInsetsController();
+            if (c != null) {
+                int mask = android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+                        | android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
+                c.setSystemBarsAppearance(dark ? 0 : mask, mask);
+            }
+        } else {
+            int f = root.getSystemUiVisibility();
+            int light = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) light |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+            root.setSystemUiVisibility(dark ? (f & ~light) : (f | light));
+        }
+    }
+
+    private boolean systemIsDark() {
+        return (getResources().getConfiguration().uiMode
+                & android.content.res.Configuration.UI_MODE_NIGHT_MASK)
+                == android.content.res.Configuration.UI_MODE_NIGHT_YES;
+    }
+
+    @Override
+    public void onConfigurationChanged(android.content.res.Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        if (webView != null) webView.evaluateJavascript("window.xaSystemThemeChanged&&window.xaSystemThemeChanged()", null);
     }
 
     @Override
@@ -267,6 +304,17 @@ public class MainActivity extends Activity {
                 return "";
             }
             return "";
+        }
+
+        @JavascriptInterface
+        public boolean isSystemDark() {
+            return systemIsDark();
+        }
+
+        @JavascriptInterface
+        public void setDarkTheme(boolean dark) {
+            getSharedPreferences("xa", MODE_PRIVATE).edit().putBoolean("dark", dark).apply();
+            runOnUiThread(() -> applyBarTheme(dark));
         }
 
         @JavascriptInterface
