@@ -360,6 +360,42 @@ body.nogray .cframe img{filter:none}
 .imgprev img{position:absolute;inset:0}
 .lb img{transform:none!important}
 body.nolink .card .go,body.nolink .lr .go{display:none}
+/* list number */
+.lt .lnum{position:absolute;top:0;right:0;z-index:2;background:var(--ink);color:var(--paper);font-size:9px;font-weight:700;letter-spacing:.5px;padding:2px 4px;line-height:1.2}
+body.nolnum .lnum{display:none}
+/* active filters line */
+.actf{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;border:2px dashed var(--ink);padding:6px 6px 6px 10px;font-size:12px;letter-spacing:.5px;text-transform:uppercase}
+.actf span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.actf i{font-style:normal;color:var(--g3)}
+.actf button{border:2px solid var(--ink);padding:4px 10px;font-weight:700;font-size:11px;letter-spacing:1px;text-transform:uppercase;flex:none}
+.actf button:active{background:var(--ink);color:var(--paper)}
+.fsheet .dim{opacity:.45}
+/* image strip in the form */
+.istrip{display:flex;gap:8px;overflow-x:auto;margin-top:10px;padding-bottom:4px;scrollbar-width:thin}
+.istrip:empty{display:none}
+.ist{flex:none;width:54px;aspect-ratio:3/4;border:2px solid var(--g2);position:relative;overflow:hidden;background:var(--g1);padding:0}
+.ist.on{border:3px solid var(--ink)}
+.ist img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:grayscale(1)}
+body.nogray .ist img{filter:none}
+.ist b{position:absolute;left:0;right:0;bottom:0;background:var(--ink);color:var(--paper);font-size:8px;letter-spacing:1px;text-transform:uppercase;text-align:center;padding:2px 0}
+.dimg .icnt{position:absolute;right:0;bottom:0;z-index:2;background:var(--ink);color:var(--paper);font-size:10px;font-weight:700;padding:3px 5px;display:flex;align-items:center;gap:3px;line-height:1}
+.dimg .icnt svg{width:10px;height:10px}
+/* gallery */
+.lb.gal{padding:0;display:block}
+.gtrack{position:absolute;inset:0;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior:contain}
+.gtrack::-webkit-scrollbar{display:none}
+.gs{flex:0 0 100%;height:100%;scroll-snap-align:center;scroll-snap-stop:always;display:flex;align-items:center;justify-content:center;padding:56px 18px 64px}
+.gs img{max-width:100%;max-height:100%;object-fit:contain}
+.gx{position:absolute;top:10px;right:10px;width:44px;height:44px;color:var(--paper);font-size:28px;font-weight:700;z-index:2}
+.gbar{position:absolute;left:0;right:0;bottom:18px;display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--paper);font-size:12px;font-weight:700;letter-spacing:2px;z-index:2;pointer-events:none}
+.gdots{display:flex;gap:7px;pointer-events:auto}
+.gdots i{width:8px;height:8px;border:2px solid var(--paper);cursor:pointer}
+.gdots i.on{background:var(--paper)}
+.gnav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border:2px solid var(--paper);color:var(--paper);display:none;align-items:center;justify-content:center;z-index:2;background:rgba(13,13,13,.5)}
+.gnav svg{width:20px;height:20px}
+.gnav:disabled{opacity:.3}
+.gp{left:12px}.gn{right:12px}
+@media (hover:hover){.gnav{display:flex}}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-delay:0s!important;transition-duration:.01ms!important}}
 </style>
 <script type="application/json" id="state">{"tags":["Manga"],"artists":[],"updatedAt":0}</script>
@@ -384,9 +420,9 @@ const gridIco=n=>{let r='';const g=2,w=(20-g*(n-1))/n;for(let i=0;i<n;i++)for(le
 const LIST_ICO='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="2" y="3" width="5" height="5"/><rect x="9" y="4" width="13" height="3"/><rect x="2" y="10" width="5" height="5"/><rect x="9" y="11" width="13" height="3"/><rect x="2" y="17" width="5" height="5"/><rect x="9" y="18" width="13" height="3"/></svg>';
 // display preferences (per device, not part of backups)
 const PK='xarchive-prefs';
-let P={view:'grid',cols:2,gray:true,showLink:true};
+let P={view:'grid',cols:2,gray:true,showLink:true,listNum:true};
 try{Object.assign(P,JSON.parse(localStorage.getItem(PK)||'{}'));}catch(e){}
-function applyPrefs(){document.body.classList.toggle('nogray',!P.gray);document.body.classList.toggle('nolink',P.showLink===false);document.body.style.setProperty('--cols',P.cols);}
+function applyPrefs(){document.body.classList.toggle('nogray',!P.gray);document.body.classList.toggle('nolink',P.showLink===false);document.body.classList.toggle('nolnum',P.listNum===false);document.body.style.setProperty('--cols',P.cols);}
 function setPref(k,v){P[k]=v;try{localStorage.setItem(PK,JSON.stringify(P));}catch(e){}applyPrefs();}
 let chipsOpen=false;
 const STAR_P='M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z';
@@ -428,7 +464,10 @@ const MAX_CHIP_ROWS=2;
 
 let S;
 try{S=JSON.parse($('#state').textContent);}catch(e){S={tags:[],artists:[],updatedAt:0};}
-function mig(o){if(!o)return o;if(o.categories&&!o.tags){o.tags=o.categories;delete o.categories;}o.tags=o.tags||[];o.artists=o.artists||[];o.artists.forEach(a=>{if(a.categories&&!a.tags){a.tags=a.categories;delete a.categories;}a.tags=a.tags||[];});return o;}
+function mig(o){if(!o)return o;if(o.categories&&!o.tags){o.tags=o.categories;delete o.categories;}o.tags=o.tags||[];o.artists=o.artists||[];o.artists.forEach(a=>{if(a.categories&&!a.tags){a.tags=a.categories;delete a.categories;}a.tags=a.tags||[];
+  if(!Array.isArray(a.images))a.images=a.image?[{src:a.image,pos:a.pos||null}]:[];syncCover(a);});return o;}
+// the last image is the cover shown on cards; a.image / a.pos mirror it
+function syncCover(a){const l=(a.images||[])[(a.images||[]).length-1];a.image=l?l.src:'';a.pos=l?(l.pos||null):null;}
 S=mig(S);
 const CSS=$('#css').textContent, JS=$('#appjs').textContent;
 let artifact=null, assets=null, ready=false;
@@ -516,9 +555,11 @@ function renderList(){
   const chips=S.tags.map(c=>'<button class="chip'+(filter.cats.includes(c)?' on':'')+'" data-cat="'+esc(c)+'">'+esc(c)+'</button>').join('');
   $('#app').innerHTML=
    (artifact||PWA?'':'<div class="notice" id="ntc" style="margin-top:20px">Saving on this device only until the page connects.</div>')+
-   '<div class="tools" style="margin-top:20px"><input id="q" type="text" placeholder="Search…" value="'+esc(filter.q)+'"><button class="ibtn sq'+(filter.rating||filter.sort!=='name'?' has':'')+'" id="fbtn" aria-label="Filter and sort" title="Filter and sort">'+FILTER_ICO+'</button><button class="ibtn sq" id="dice" aria-label="Random artist" title="Random artist">'+DICE+'</button><button class="btn dark" id="add">+ Artist</button></div>'+
-   '<div class="chips" id="fchips">'+(S.tags.length?'<button class="chip'+(filter.cats.length?'':' on')+'" data-all="1">All</button>'+chips+'<button class="chip more" data-more="1"></button>':'<button class="chip ghost" id="cats2">+ Add tags</button>')+'</div>'+
-   (filter.cats.length>1?'<div class="tmode"><span>Match</span><div class="tseg"><button data-tm="or" class="'+(filter.tagMode!=='and'?'on':'')+'">Any tag</button><button data-tm="and" class="'+(filter.tagMode==='and'?'on':'')+'">All tags</button></div></div>':'')+
+   '<div class="tools" style="margin-top:20px"><input id="q" type="text" placeholder="Search…" value="'+esc(filter.q)+'"><button class="ibtn sq'+(filter.rating||filter.cats.length||filter.sort!=='name'?' has':'')+'" id="fbtn" aria-label="Filter and sort" title="Filter and sort">'+FILTER_ICO+'</button><button class="ibtn sq" id="dice" aria-label="Random artist" title="Random artist">'+DICE+'</button><button class="btn dark" id="add">+ Artist</button></div>'+
+   (filter.cats.length||filter.rating?'<div class="actf"><span>'+
+      (filter.cats.length?'<b>'+filter.cats.map(esc).join(filter.tagMode==='and'?' + ':' / ')+'</b>'+(filter.cats.length>1?' <i>('+(filter.tagMode==='and'?'all':'any')+')</i>':''):'')+
+      (filter.cats.length&&filter.rating?' · ':'')+(filter.rating?'<b>'+(filter.rating===-1?'Unrated':'★ '+(filter.rating===5?'5':filter.rating+'+'))+'</b>':'')+
+      '</span><button id="fclr">Clear</button></div>':'')+
    '<div class="sec"><h2>Artists</h2><span>'+(filter.q||filter.cats.length||filter.rating?list.length+' / ':'')+S.artists.length+'</span></div>'+
    (S.artists.length===0?
      '<div class="empty"><h3>Archive is empty</h3><p>Add an artist, set the manga image you remember them by.</p><button class="cta" id="add2">+ Add first artist</button></div>':
@@ -526,7 +567,7 @@ function renderList(){
     P.view==='list'?
      '<div class="list">'+list.map((a,i)=>{
        const l=href(a.link);
-       return '<div class="lr" data-id="'+a.id+'" style="--i:'+Math.min(i,12)+'"><div class="lt">'+thumb(a)+'</div><div class="lx"><div class="cname">'+esc(a.name)+'</div><div class="ccat">'+esc((a.tags||[]).join(' · ')||'—')+'</div>'+(+a.rating?starsView(a.rating):'')+'</div>'+(l?'<a class="go" href="'+esc(l)+'" target="_blank" rel="noopener" title="Open link">'+ARR+'</a>':'<span></span>')+'</div>';
+       return '<div class="lr" data-id="'+a.id+'" style="--i:'+Math.min(i,12)+'"><div class="lt">'+thumb(a)+'<span class="lnum">'+pad(idxOf(a))+'</span></div><div class="lx"><div class="cname">'+esc(a.name)+'</div><div class="ccat">'+esc((a.tags||[]).join(' · ')||'—')+'</div>'+(+a.rating?starsView(a.rating):'')+'</div>'+(l?'<a class="go" href="'+esc(l)+'" target="_blank" rel="noopener" title="Open link">'+ARR+'</a>':'<span></span>')+'</div>';
      }).join('')+'</div>':
      '<div class="grid cols'+P.cols+'">'+list.map((a,i)=>{
        const l=href(a.link);
@@ -540,7 +581,7 @@ function renderList(){
   const c2=$('#cats2');if(c2)c2.onclick=openCats;
   $('#fbtn').onclick=openFilter;
   $('#dice').onclick=()=>rollDice($('#dice'));
-  document.querySelectorAll('[data-tm]').forEach(b=>b.onclick=()=>{filter.tagMode=b.dataset.tm;renderList();});
+  const fc=$('#fclr');if(fc)fc.onclick=()=>{filter.cats=[];filter.rating=0;renderList();};
   document.querySelectorAll('.chip[data-cat]').forEach(b=>b.onclick=()=>{const c=b.dataset.cat;filter.cats=filter.cats.includes(c)?filter.cats.filter(x=>x!==c):[...filter.cats,c];renderList();});
   const all=document.querySelector('.chip[data-all]');if(all)all.onclick=()=>{filter.cats=[];renderList();};
   document.querySelectorAll('#app [data-id]').forEach(c=>c.onclick=e=>{if(e.target.closest('.go'))return;location.hash='artist-'+c.dataset.id;});
@@ -573,7 +614,7 @@ function renderDetail(a){
   $('#app').innerHTML=
    '<div class="dtop"><button class="back" id="back">'+ARL+'All artists</button><button class="back" id="dice2" aria-label="Another random artist" title="Another random artist">'+DICE+'Random</button></div>'+
    '<div class="det"><div class="info">'+
-   '<div class="top"><div class="th"><button class="dimg" id="dimg" aria-label="View image">'+thumb(a)+'</button><div class="tt"><h1>'+esc(a.name)+'</h1><div class="tags">'+(a.tags||[]).map(c=>'<span class="tag">'+esc(c)+'</span>').join('')+'</div>'+starsInput(a.rating,'data-ar="1"')+'</div></div></div>'+
+   '<div class="top"><div class="th"><button class="dimg" id="dimg" aria-label="View images">'+thumb(a)+((a.images||[]).length>1?'<span class="icnt">'+STACK+a.images.length+'</span>':'')+'</button><div class="tt"><h1>'+esc(a.name)+'</h1><div class="tags">'+(a.tags||[]).map(c=>'<span class="tag">'+esc(c)+'</span>').join('')+'</div>'+starsInput(a.rating,'data-ar="1"')+'</div></div></div>'+
    '<div class="row">'+(l?'<a href="'+esc(l)+'" target="_blank" rel="noopener">Open link '+ARR+'</a>':'<span style="opacity:.5">No link</span>')+'<button id="edit">Edit artist</button></div>'+
    (a.note?'<div class="note"><span class="lbl">Note</span>'+esc(a.note)+'</div>':'')+
    '</div></div><div class="det works"><h3><span class="wt">Works</span><button class="wadd" id="addw">+ Add work</button></h3>'+
@@ -586,10 +627,7 @@ function renderDetail(a){
   $('#back').onclick=()=>{location.hash='';};
   $('#dice2').onclick=()=>rollDice($('#dice2'));
   $('#edit').onclick=()=>openEditArtist(a);
-  $('#dimg').onclick=()=>{if(!a.image)return openEditArtist(a);
-    $('#layer').innerHTML='<div class="lb" id="lb"><img src="'+esc(a.image)+'" alt=""></div>';
-    closeTop=()=>{const lb=$('#lb');if(!lb)return;lb.classList.add('out');setTimeout(()=>lb.remove(),180);closeTop=null;};
-    $('#lb').onclick=()=>closeTop&&closeTop();};
+  $('#dimg').onclick=()=>{if(!(a.images||[]).length)return openEditArtist(a);openGallery(a.images,a.images.length-1);};
   $('#addw').onclick=()=>openAddWork(a);
   document.querySelectorAll('.wbtn').forEach(b=>b.onclick=()=>openEditWork(a,+b.dataset.w));
   wireStarInputs($('#app'),(g,v)=>{
@@ -684,22 +722,43 @@ async function toImage(file){
   throw new Error('This image format could not be read. Try a JPG or PNG.');
 }
 function imageField(d){
-  return '<div class="field"><label class="lbl">Reference image</label><div class="imgpick"><div class="imgprev" id="ip"></div><div class="imgbtns">'+
-    '<button class="sbtn dark" id="fpick">Choose image</button><input type="file" accept="image/*" id="ff" class="vh">'+
+  return '<div class="field"><label class="lbl">Images <span id="icount"></span></label><div class="imgpick"><div class="imgprev" id="ip"></div><div class="imgbtns">'+
+    '<button class="sbtn dark" id="fpick">Add image</button><input type="file" accept="image/*" multiple id="ff" class="vh">'+
     '<button class="sbtn" id="fpaste">Paste image</button>'+
-    '<button class="sbtn" id="fadj">Adjust</button><button class="sbtn" id="frm">Remove</button></div></div><div id="ierr"></div></div>';
+    '<button class="sbtn" id="fadj">Adjust</button><button class="sbtn" id="fcov">Set as cover</button><button class="sbtn" id="frm">Remove</button></div></div>'+
+    '<div class="istrip" id="istrip"></div><span class="hint" id="ihint"></span><div id="ierr"></div></div>';
 }
 function wireImage(d,getName){
-  const draw=()=>{const ip=$('#ip');if(!ip)return;ip.innerHTML=d.image?thumb(d):thumb({name:getName()});$('#frm').style.display=d.image?'':'none';$('#fadj').style.display=d.image?'':'none';};
-  const use=async f=>{
-    $('#ierr').innerHTML='';$('#ip').innerHTML='<div class="ph"><span class="hint">Loading…</span></div>';
-    try{d.image=await toImage(f);d.pos=null;draw();cropEditor(d,draw);return;}catch(err){$('#ierr').innerHTML='<div class="err">'+esc(err.message||'Could not use that image.')+'</div>';}
-    draw();
+  if(!Array.isArray(d.images))d.images=d.image?[{src:d.image,pos:d.pos||null}]:[];
+  let sel=d.images.length-1;
+  const draw=()=>{
+    const ip=$('#ip');if(!ip)return;
+    syncCover(d);
+    const n=d.images.length,cur=d.images[sel];
+    ip.innerHTML=cur?thumb({image:cur.src,pos:cur.pos}):thumb({name:getName()});
+    $('#fadj').style.display=cur?'':'none';$('#frm').style.display=cur?'':'none';
+    $('#fcov').style.display=cur&&sel!==n-1?'':'none';
+    $('#icount').textContent=n>1?'('+n+')':'';
+    $('#ihint').textContent=n>1?'The last image is the cover shown on cards. Tap a thumbnail to select it.':'';
+    $('#istrip').innerHTML=n>1?d.images.map((im,k)=>'<button class="ist'+(k===sel?' on':'')+'" data-s="'+k+'"><img src="'+esc(im.src)+'" alt=""'+posStyle(im)+'>'+(k===n-1?'<b>Cover</b>':'')+'</button>').join(''):'';
+    $('#istrip').querySelectorAll('[data-s]').forEach(b=>b.onclick=e=>{e.preventDefault();sel=+b.dataset.s;draw();});
+    const st=$('#istrip .ist.on');if(st)st.scrollIntoView({block:'nearest',inline:'nearest'});
   };
-  $('#fadj').onclick=e=>{e.preventDefault();cropEditor(d,draw);};
-  $('#ip').onclick=()=>{if(d.image)cropEditor(d,draw);};
+  const adjust=()=>{const cur=d.images[sel];if(!cur)return;const o={image:cur.src,pos:cur.pos};cropEditor(o,()=>{cur.pos=o.pos;draw();});};
+  const add=src=>{d.images.push({src,pos:null});sel=d.images.length-1;};
+  const use=async files=>{
+    $('#ierr').innerHTML='';$('#ip').innerHTML='<div class="ph"><span class="hint">Loading…</span></div>';
+    let added=0;
+    for(const f of files){try{add(await toImage(f));added++;}catch(err){$('#ierr').innerHTML='<div class="err">'+esc(err.message||'Could not use that image.')+'</div>';}}
+    draw();
+    if(added===1)adjust();else if(added>1)toast(added+' images added');
+  };
   $('#fpick').onclick=e=>{e.preventDefault();$('#ff').click();};
-  $('#ff').onchange=e=>{const f=e.target.files&&e.target.files[0];if(f)use(f);e.target.value='';};
+  $('#ff').onchange=e=>{const fs=[...(e.target.files||[])];if(fs.length)use(fs);e.target.value='';};
+  $('#fadj').onclick=e=>{e.preventDefault();adjust();};
+  $('#ip').onclick=()=>adjust();
+  $('#fcov').onclick=e=>{e.preventDefault();const [m]=d.images.splice(sel,1);d.images.push(m);sel=d.images.length-1;draw();toast('Cover set');};
+  $('#frm').onclick=e=>{e.preventDefault();d.images.splice(sel,1);sel=Math.min(sel,d.images.length-1);draw();};
   // Paste the most recently copied image (native clipboard on Android, Clipboard API elsewhere)
   $('#fpaste').onclick=async e=>{
     e.preventDefault();$('#ierr').innerHTML='';
@@ -708,18 +767,17 @@ function wireImage(d,getName){
     try{
       if(window.XArchiveNative&&XArchiveNative.getClipboardImage){
         const r=XArchiveNative.getClipboardImage()||'';
-        if(r.startsWith('data:')){const bl=await (await fetch(r)).blob();return use(new File([bl],'paste',{type:bl.type}));}
+        if(r.startsWith('data:')){const bl=await (await fetch(r)).blob();return use([new File([bl],'paste',{type:bl.type})]);}
         if(/^https?:\/\//i.test(r)){$('#ip').innerHTML='<div class="ph"><span class="hint">Loading…</span></div>';
-          if(await loadsOk(r)){d.image=r;d.pos=null;draw();cropEditor(d,draw);return;}draw();return fail('Copied link is not an image that can be loaded.');}
+          if(await loadsOk(r)){add(r);draw();adjust();return;}draw();return fail('Copied link is not an image that can be loaded.');}
         return fail(NO);
       }
-      if(!navigator.clipboard||!navigator.clipboard.read)return fail('Pasting is not supported here — use Choose image.');
+      if(!navigator.clipboard||!navigator.clipboard.read)return fail('Pasting is not supported here — use Add image.');
       const items=await navigator.clipboard.read();
-      for(const it of items){const t=it.types.find(x=>x.startsWith('image/'));if(t){const bl=await it.getType(t);return use(new File([bl],'paste',{type:t}));}}
+      for(const it of items){const t=it.types.find(x=>x.startsWith('image/'));if(t){const bl=await it.getType(t);return use([new File([bl],'paste',{type:t})]);}}
       fail(NO);
-    }catch(err){fail(/denied|permission/i.test(String(err&&err.message))?'Clipboard access was blocked — allow it, or use Choose image.':NO);}
+    }catch(err){fail(/denied|permission/i.test(String(err&&err.message))?'Clipboard access was blocked — allow it, or use Add image.':NO);}
   };
-  $('#frm').onclick=e=>{e.preventDefault();d.image='';d.pos=null;draw();};
   draw();return draw;
 }
 function catField(){return '<div class="field"><label class="lbl">Tags</label><div class="tagbox" id="tb"><div class="chips" id="fc"></div><input id="ti" type="text" autocomplete="off" placeholder="Type to find a tag…"></div><div class="sugg" id="ts"></div><span class="hint">New tags are created in the Tags menu.</span></div>';}
@@ -756,7 +814,7 @@ function readBasic(d){d.name=$('#fn').value.trim();d.link=$('#fl').value.trim();
 
 // ---- ADD ARTIST ----
 function openAddArtist(){
-  const d={id:uid(),name:'',link:'',image:'',tags:S.tags.includes('Manga')?['Manga']:[],note:'',works:[],rating:0};
+  const d={id:uid(),name:'',link:'',image:'',images:[],tags:S.tags.includes('Manga')?['Manga']:[],note:'',works:[],rating:0};
   const close=modal('Add artist',basicFields(d)+rateField(d,'far')+imageField(d)+catField()+noteField(d)+'<div id="ferr"></div>',
     '<div class="mf"><button id="fcn">Cancel</button><button class="pri" id="fsv">Add artist</button></div>');
   const drawImg=wireImage(d,()=>$('#fn').value);wireCats(d);wireRate(d,'far');
@@ -803,9 +861,10 @@ function openEditWork(a,i){
 async function exportData(){
   const out=JSON.parse(JSON.stringify(S));
   for(const a of out.artists){
-    if(a.image&&!a.image.startsWith('data:')){
-      try{const b=await (await fetch(a.image)).blob();a.image=await blobToData(b);}catch(e){a.image='';}
+    for(const im of (a.images||[])){
+      if(im.src&&!im.src.startsWith('data:')){try{const b=await (await fetch(im.src)).blob();im.src=await blobToData(b);}catch(e){im.src='';}}
     }
+    a.images=(a.images||[]).filter(im=>im.src);syncCover(a);
   }
   return JSON.stringify(out);
 }
@@ -837,7 +896,8 @@ function openSettings(){
   const close=modal('Settings',
     '<div class="field"><label class="lbl">Layout</label><div class="seg">'+layouts.map(l=>'<button data-l="'+l[0]+'" class="'+(l[0]===cur?'on':'')+'">'+l[1]+l[2]+'</button>').join('')+'</div></div>'+
     '<div class="field"><label class="lbl">Display</label><button class="srow" id="sgray"><span>Grayscale images<small>Show artist images in black &amp; white</small></span><span class="tg'+(P.gray?' on':'')+'"></span></button>'+
-    '<button class="srow" id="slink"><span>Link icon on cards<small>Show the open-link button on each artist</small></span><span class="tg'+(P.showLink!==false?' on':'')+'"></span></button></div>'+
+    '<button class="srow" id="slink"><span>Link icon on cards<small>Show the open-link button on each artist</small></span><span class="tg'+(P.showLink!==false?' on':'')+'"></span></button>'+
+    '<button class="srow" id="slnum"><span>Numbers in list view<small>Show each artist\'s number on the list image</small></span><span class="tg'+(P.listNum!==false?' on':'')+'"></span></button></div>'+
     '<div class="field"><label class="lbl">Security</label><button class="srow" id="slock"><span>App lock<small>Ask for a 4-digit PIN when the app opens</small></span><span class="tg'+(getLock()?' on':'')+'"></span></button>'+
     '<button class="srow" id="spin"'+(getLock()?'':' style="display:none"')+'><span>Change PIN</span>'+ARR_R+'</button></div>'+
     '<div class="field"><label class="lbl">Tags</label><button class="srow" id="stags"><span>Manage tags<small>'+S.tags.length+' tags · add, rename, delete</small></span>'+ARR_R+'</button></div>'+
@@ -845,6 +905,7 @@ function openSettings(){
   document.querySelectorAll('.seg [data-l]').forEach(b=>b.onclick=()=>{
     const v=b.dataset.l;if(v==='list')setPref('view','list');else{setPref('cols',+v.slice(1));setPref('view','grid');}
     document.querySelectorAll('.seg [data-l]').forEach(x=>x.classList.toggle('on',x===b));render();});
+  $('#slnum').onclick=()=>{setPref('listNum',P.listNum===false);$('#slnum .tg').classList.toggle('on',P.listNum!==false);};
   $('#slink').onclick=()=>{setPref('showLink',P.showLink===false);$('#slink .tg').classList.toggle('on',P.showLink!==false);};
   $('#sgray').onclick=()=>{setPref('gray',!P.gray);$('#sgray .tg').classList.toggle('on',P.gray);};
   $('#stags').onclick=()=>{close();openCats();};
@@ -855,6 +916,28 @@ function openSettings(){
   };
   $('#spin').onclick=()=>verifyPin('Change PIN',()=>setNewPin(()=>toast('PIN changed')));
   $('#sbk').onclick=()=>{close();openBackup();};
+}
+
+// ---- full-screen gallery: swipe between images ----
+const STACK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><rect x="7" y="7" width="13" height="13"/><path d="M4 16V4h12"/></svg>';
+function openGallery(imgs,start){
+  const n=imgs.length;
+  $('#layer').innerHTML='<div class="lb gal" id="lb"><div class="gtrack" id="gtr">'+imgs.map(im=>'<div class="gs"><img src="'+esc(im.src)+'" alt="" draggable="false"></div>').join('')+'</div>'+
+    '<button class="gx" id="gx" aria-label="Close">×</button>'+
+    (n>1?'<button class="gnav gp" id="gp" aria-label="Previous">'+ARL+'</button><button class="gnav gn" id="gn" aria-label="Next">'+ARR_R+'</button>'+
+      '<div class="gbar"><span id="gcnt"></span><div class="gdots">'+imgs.map((_,k)=>'<i data-g="'+k+'"></i>').join('')+'</div></div>':'')+'</div>';
+  const tr=$('#gtr');let idx=start;
+  const upd=()=>{const c=$('#gcnt');if(!c)return;c.textContent=(idx+1)+' / '+n;document.querySelectorAll('.gdots i').forEach((d,k)=>d.classList.toggle('on',k===idx));
+    const gp=$('#gp'),gn=$('#gn');if(gp)gp.disabled=idx===0;if(gn)gn.disabled=idx===n-1;};
+  const go=k=>{idx=Math.max(0,Math.min(n-1,k));tr.scrollTo({left:idx*tr.clientWidth,behavior:'smooth'});upd();};
+  requestAnimationFrame(()=>{tr.scrollLeft=idx*tr.clientWidth;upd();});
+  tr.onscroll=()=>{const k=Math.round(tr.scrollLeft/Math.max(1,tr.clientWidth));if(k!==idx){idx=k;upd();}};
+  closeTop=()=>{const lb=$('#lb');if(!lb)return;lb.classList.add('out');setTimeout(()=>lb.remove(),180);closeTop=null;document.removeEventListener('keydown',kd);};
+  const kd=e=>{if(e.key==='ArrowRight')go(idx+1);else if(e.key==='ArrowLeft')go(idx-1);else if(e.key==='Escape')closeTop&&closeTop();};
+  document.addEventListener('keydown',kd);
+  $('#gx').onclick=()=>closeTop&&closeTop();
+  if(n>1){$('#gp').onclick=()=>go(idx-1);$('#gn').onclick=()=>go(idx+1);document.querySelectorAll('.gdots i').forEach(d=>d.onclick=()=>go(+d.dataset.g));}
+  tr.onclick=e=>{if(e.target.classList.contains('gs'))closeTop&&closeTop();};
 }
 
 // ---- image editor: drag to move, pinch / slider / wheel to zoom ----
@@ -902,8 +985,9 @@ function cropEditor(d,done){
 function openFilter(){
   const sorts=[['name','Name A–Z'],['za','Name Z–A'],['rating','Rating ↓']];
   const close=modal('Filter & sort','<div class="fsheet">'+
-    '<div class="field"><label class="lbl">Artist rating</label><div class="chips" id="frt"></div></div>'+
-    '<div class="field" style="margin-top:16px"><label class="lbl">When several tags are selected</label><div class="seg" style="grid-template-columns:1fr 1fr" id="ftm"></div></div>'+
+    '<div class="field"><label class="lbl">Tags</label><div class="chips" id="ftg"></div></div>'+
+    '<div class="field" style="margin-top:12px" id="ftmw"><label class="lbl">When several tags are selected</label><div class="seg" style="grid-template-columns:1fr 1fr" id="ftm"></div></div>'+
+    '<div class="field" style="margin-top:16px"><label class="lbl">Artist rating</label><div class="chips" id="frt"></div></div>'+
     '<div class="field" style="margin-top:16px"><label class="lbl">Sort by</label><div class="seg" style="grid-template-columns:repeat(3,1fr)" id="fso"></div></div></div>',
     '<div class="mf"><button id="frs">Reset</button><button class="pri" id="fdn">Done</button></div>');
   const draw=()=>{
@@ -911,11 +995,18 @@ function openFilter(){
     $('#fso').innerHTML=sorts.map(o=>'<button data-fs="'+o[0]+'" class="'+(filter.sort===o[0]?'on':'')+'" style="padding:12px 0">'+o[1]+'</button>').join('');
     $('#ftm').innerHTML=[['or','Any tag (OR)'],['and','All tags (AND)']].map(o=>'<button data-ftm="'+o[0]+'" class="'+((filter.tagMode||'or')===o[0]?'on':'')+'" style="padding:12px 0">'+o[1]+'</button>').join('');
     document.querySelectorAll('[data-ftm]').forEach(b=>b.onclick=()=>{filter.tagMode=b.dataset.ftm;draw();renderList();});
+    $('#ftmw').classList.toggle('dim',filter.cats.length<2);
+    $('#ftg').innerHTML=S.tags.length?'<button class="chip'+(filter.cats.length?'':' on')+'" data-fall="1">All</button>'+
+      S.tags.map(c=>'<button class="chip'+(filter.cats.includes(c)?' on':'')+'" data-ftag="'+esc(c)+'">'+esc(c)+'</button>').join(''):
+      '<button class="chip ghost" id="faddt">+ Add tags</button>';
+    document.querySelectorAll('[data-ftag]').forEach(b=>b.onclick=()=>{const c=b.dataset.ftag;filter.cats=filter.cats.includes(c)?filter.cats.filter(x=>x!==c):[...filter.cats,c];draw();renderList();});
+    const fa=document.querySelector('[data-fall]');if(fa)fa.onclick=()=>{filter.cats=[];draw();renderList();};
+    const ft=$('#faddt');if(ft)ft.onclick=()=>{close();openCats();};
     document.querySelectorAll('[data-fr]').forEach(b=>b.onclick=()=>{filter.rating=+b.dataset.fr;draw();renderList();});
     document.querySelectorAll('[data-fs]').forEach(b=>b.onclick=()=>{filter.sort=b.dataset.fs;draw();renderList();});
   };
   draw();
-  $('#frs').onclick=()=>{filter.rating=0;filter.sort='name';filter.tagMode='or';draw();renderList();};
+  $('#frs').onclick=()=>{filter.cats=[];filter.rating=0;filter.sort='name';filter.tagMode='or';draw();renderList();};
   $('#fdn').onclick=close;
 }
 
