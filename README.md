@@ -33,3 +33,13 @@ over the existing app (you would have to uninstall, which deletes the app's data
 
 To update the web app, replace the files in `app/src/main/assets/www/`, bump `versionCode` /
 `versionName` in `app/build.gradle`, and rebuild.
+
+## Web version (GitHub Pages)
+
+The same app runs in the browser as an installable PWA. `.github/workflows/pages.yml` publishes
+`app/src/main/assets/www/` to GitHub Pages on every push that changes it (or run it manually from
+the Actions tab). One-time setup: repository **Settings → Pages → Build and deployment → Source:
+GitHub Actions**. The site is then at `https://<owner>.github.io/<repo>/`.
+
+Data in the web version is stored in that browser only; use Settings → Backup & restore to move it
+between the web version and the Android app.
