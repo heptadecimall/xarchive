@@ -91,6 +91,7 @@ svg.ar{width:.95em;height:.95em;display:inline-block;vertical-align:-.1em;flex:n
 .cols3 .go,.cols4 .go{width:26px;height:26px;top:5px;right:5px}
 .cols3 .go svg,.cols4 .go svg{width:13px;height:13px}
 .cols4 .num{font-size:9px;padding:3px 5px}
+.cols3 .num{font-size:10px;padding:3px 6px}
 .cols3 .ph .big{font-size:44px}.cols4 .ph .big{font-size:32px}
 /* list view */
 .list{display:flex;flex-direction:column;gap:8px}
@@ -312,7 +313,7 @@ body.nogray .dimg img,body.nogray .lb img{filter:none}
 .srate.sm button{width:26px;height:26px}
 .srate.sm button svg{width:17px;height:17px}
 .srate .off{opacity:.22}
-.rb{position:absolute;top:0;left:0;background:var(--ink);color:var(--paper);font-weight:700;font-size:11px;letter-spacing:.5px;padding:4px 7px 4px 6px;z-index:2;display:flex;align-items:center;gap:3px;line-height:1}
+.rb{position:absolute;bottom:0;left:0;background:var(--ink);color:var(--paper);font-weight:700;font-size:11px;letter-spacing:.5px;padding:4px 7px 4px 6px;z-index:2;display:flex;align-items:center;gap:3px;line-height:1}
 .rb svg{width:11px;height:11px}
 .cols4 .rb{font-size:9px;padding:3px 5px 3px 4px}.cols4 .rb svg{width:9px;height:9px}
 .lx .stars{margin-top:5px}.lx .stars svg{width:12px;height:12px}
@@ -361,8 +362,8 @@ body.nogray .cframe img{filter:none}
 .lb img{transform:none!important}
 body.nolink .card .go,body.nolink .lr .go{display:none}
 /* list number */
-.lt .lnum{position:absolute;top:0;right:0;z-index:2;background:var(--ink);color:var(--paper);font-size:9px;font-weight:700;letter-spacing:.5px;padding:2px 4px;line-height:1.2}
-body.nolnum .lnum{display:none}
+.lt .lnum{position:absolute;top:0;left:0;z-index:2;background:var(--ink);color:var(--paper);font-size:9px;font-weight:700;letter-spacing:.5px;padding:2px 4px;line-height:1.2}
+body.nolnum .lnum,body.nolnum .thumb .num{display:none}
 /* active filters line */
 .actf{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;border:2px dashed var(--ink);padding:6px 6px 6px 10px;font-size:12px;letter-spacing:.5px;text-transform:uppercase}
 .actf span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -571,7 +572,7 @@ function renderList(){
      }).join('')+'</div>':
      '<div class="grid cols'+P.cols+'">'+list.map((a,i)=>{
        const l=href(a.link);
-       return '<div class="card" data-id="'+a.id+'" style="--i:'+Math.min(i,12)+'"><div class="thumb">'+(+a.rating?'<span class="rb">'+STAR+a.rating+'</span>':'')+(l?'<a class="go" href="'+esc(l)+'" target="_blank" rel="noopener" title="Open link">'+ARR+'</a>':'')+thumb(a)+'</div><div class="cname">'+esc(a.name)+'</div><div class="ccat">'+esc((a.tags||[]).join(' · ')||'—')+'</div></div>';
+       return '<div class="card" data-id="'+a.id+'" style="--i:'+Math.min(i,12)+'"><div class="thumb"><span class="num">'+pad(idxOf(a))+'</span>'+(+a.rating?'<span class="rb">'+STAR+a.rating+'</span>':'')+(l?'<a class="go" href="'+esc(l)+'" target="_blank" rel="noopener" title="Open link">'+ARR+'</a>':'')+thumb(a)+'</div><div class="cname">'+esc(a.name)+'</div><div class="ccat">'+esc((a.tags||[]).join(' · ')||'—')+'</div></div>';
      }).join('')+'</div>');
   if(artifact){const n=$('#ntc');if(n)n.remove();}
   const q=$('#q');
@@ -897,7 +898,7 @@ function openSettings(){
     '<div class="field"><label class="lbl">Layout</label><div class="seg">'+layouts.map(l=>'<button data-l="'+l[0]+'" class="'+(l[0]===cur?'on':'')+'">'+l[1]+l[2]+'</button>').join('')+'</div></div>'+
     '<div class="field"><label class="lbl">Display</label><button class="srow" id="sgray"><span>Grayscale images<small>Show artist images in black &amp; white</small></span><span class="tg'+(P.gray?' on':'')+'"></span></button>'+
     '<button class="srow" id="slink"><span>Link icon on cards<small>Show the open-link button on each artist</small></span><span class="tg'+(P.showLink!==false?' on':'')+'"></span></button>'+
-    '<button class="srow" id="slnum"><span>Numbers in list view<small>Show each artist\'s number on the list image</small></span><span class="tg'+(P.listNum!==false?' on':'')+'"></span></button></div>'+
+    '<button class="srow" id="slnum"><span>Show numbers<small>Each artist\'s number in the top-left of its image</small></span><span class="tg'+(P.listNum!==false?' on':'')+'"></span></button></div>'+
     '<div class="field"><label class="lbl">Security</label><button class="srow" id="slock"><span>App lock<small>Ask for a 4-digit PIN when the app opens</small></span><span class="tg'+(getLock()?' on':'')+'"></span></button>'+
     '<button class="srow" id="spin"'+(getLock()?'':' style="display:none"')+'><span>Change PIN</span>'+ARR_R+'</button></div>'+
     '<div class="field"><label class="lbl">Tags</label><button class="srow" id="stags"><span>Manage tags<small>'+S.tags.length+' tags · add, rename, delete</small></span>'+ARR_R+'</button></div>'+

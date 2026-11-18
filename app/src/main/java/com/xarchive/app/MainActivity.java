@@ -222,7 +222,18 @@ public class MainActivity extends Activity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQ_FILE_CHOOSER) {
             if (fileCallback != null) {
-                fileCallback.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(resultCode, data));
+                // parseResult() only returns one file; read every picked file for multi-select.
+                Uri[] picked = null;
+                if (resultCode == RESULT_OK && data != null) {
+                    ClipData cd = data.getClipData();
+                    if (cd != null && cd.getItemCount() > 0) {
+                        picked = new Uri[cd.getItemCount()];
+                        for (int i = 0; i < cd.getItemCount(); i++) picked[i] = cd.getItemAt(i).getUri();
+                    } else if (data.getData() != null) {
+                        picked = new Uri[]{data.getData()};
+                    }
+                }
+                fileCallback.onReceiveValue(picked);
                 fileCallback = null;
             }
         } else if (requestCode == REQ_SAVE_FILE) {
