@@ -14,7 +14,7 @@ android {
         applicationId 'com.xarchive.app'
         minSdk 24
         targetSdk 35
-        versionCode 11
+        versionCode 12
         versionName '1.0.1'
     }
 
@@ -33,6 +33,13 @@ android {
         release {
             minifyEnabled false
             if (ksFile.exists()) signingConfig signingConfigs.release
+        }
+    }
+
+    // The web app lives in /docs (also served by GitHub Pages); package it as the APK's assets.
+    sourceSets {
+        main {
+            assets.srcDirs += [rootProject.file('docs')]
         }
     }
 

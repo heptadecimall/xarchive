@@ -7,9 +7,9 @@ Build the attached web app (zip) into an installable Android APK. Follow this sp
 ## Project
 - Native Android project in the repo root. Package / applicationId: `com.xarchive.app` (keep this unchanged so new builds install as updates over the old app). App label: taken from the web manifest `name`. minSdk 24, targetSdk 35, compileSdk 35.
 - If I attach `xarchive-release.keystore` + `keystore.properties`, sign the release build with them (read via keystore.properties, both gitignored, never committed). Otherwise create a new keystore, give it to me and warn me to keep it. Set `versionCode` higher than any build I have installed (ask me if unsure; use a high number like 10 if I don't know).
-- Copy all web files unmodified into `app/src/main/assets/www/` (except the safe-area edits below).
+- Put all web files in `docs/` at the repo root (served by GitHub Pages from the /docs folder) and add `assets.srcDirs += [rootProject.file('docs')]` in app/build.gradle so the same files are the APK assets; load `https://appassets.androidplatform.net/index.html`. Add an empty `docs/.nojekyll`.
 - Dependency: `androidx.webkit:webkit`. Single `MainActivity extends Activity` with a WebView.
-- Serve the assets via `WebViewAssetLoader` at `https://appassets.androidplatform.net/www/index.html` (NOT file://), so localStorage/IndexedDB work and persist. Enable JavaScript, DOM storage and database storage.
+- Serve the assets via `WebViewAssetLoader` at `https://appassets.androidplatform.net/index.html` (NOT file://), so localStorage/IndexedDB work and persist. Enable JavaScript, DOM storage and database storage.
 - Launcher icon: adaptive icon using the maskable PNG as foreground wrapped in an `<inset android:inset="8%">`, background = the icon's edge colour; legacy mipmaps resized from the 512 icon. Theme: `Theme.Material.Light.NoActionBar` with window/status/nav bar colour = the manifest background_color (put windowLightNavigationBar in values-v27).
 
 ## Native bridge (inject a bridge.js with WebViewCompat.addDocumentStartJavaScript, fall back to evaluateJavascript in onPageStarted/onPageFinished)

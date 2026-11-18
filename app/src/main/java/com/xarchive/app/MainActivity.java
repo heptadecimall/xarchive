@@ -37,7 +37,7 @@ public class MainActivity extends Activity {
 
     // Served from a fixed https origin so localStorage / IndexedDB persist and behave like the web.
     private static final String HOST = "appassets.androidplatform.net";
-    private static final String START_URL = "https://" + HOST + "/www/index.html";
+    private static final String START_URL = "https://" + HOST + "/index.html";
 
     private static final int REQ_FILE_CHOOSER = 1;
     private static final int REQ_SAVE_FILE = 2;
