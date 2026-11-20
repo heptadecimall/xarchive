@@ -397,6 +397,22 @@ body.nogray .ist img{filter:none}
 .gnav:disabled{opacity:.3}
 .gp{left:12px}.gn{right:12px}
 @media (hover:hover){.gnav{display:flex}}
+/* folders */
+.fmos{display:grid!important;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:2px;background:var(--ink)}
+.fmos .mc{position:relative;overflow:hidden;background:var(--g1)}
+.fmos .mc .ph .big{font-size:18px}
+.lt.fmos .mc .ph .big{font-size:11px}
+.fold{position:relative}
+.fold:before{content:'';position:absolute;top:-10px;left:-3px;width:44%;height:10px;background:var(--ink);clip-path:polygon(0 0,82% 0,100% 100%,0 100%)}
+.lr.fold:before{width:28%}
+.fold .cname svg.fico,.sec h2 svg.fico,.chip svg.fico{width:.95em;height:.95em;display:inline-block;vertical-align:-.1em;margin-right:5px}
+.fcnt{position:absolute;top:0;left:0;z-index:2;background:var(--ink);color:var(--paper);font-weight:700;font-size:11px;letter-spacing:1px;padding:4px 7px}
+.cols4 .fcnt{font-size:9px;padding:3px 5px}
+.fchev{margin-right:14px;display:flex}.fchev svg{width:18px;height:18px}
+.grid + .sec,.list + .sec,.fnone + .sec{margin-top:30px}
+.sec + .grid .fold,.sec + .list .fold{margin-top:8px}
+.fup{margin-top:14px}
+.fnone{padding:6px 0}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-delay:0s!important;transition-duration:.01ms!important}}
 </style>
 <script type="application/json" id="state">{"tags":["Manga"],"artists":[],"updatedAt":0}</script>
@@ -421,7 +437,7 @@ const gridIco=n=>{let r='';const g=2,w=(20-g*(n-1))/n;for(let i=0;i<n;i++)for(le
 const LIST_ICO='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="2" y="3" width="5" height="5"/><rect x="9" y="4" width="13" height="3"/><rect x="2" y="10" width="5" height="5"/><rect x="9" y="11" width="13" height="3"/><rect x="2" y="17" width="5" height="5"/><rect x="9" y="18" width="13" height="3"/></svg>';
 // display preferences (per device, not part of backups)
 const PK='xarchive-prefs';
-let P={view:'grid',cols:2,gray:true,showLink:true,listNum:true};
+let P={view:'grid',cols:2,gray:true,showLink:true,listNum:true,folders:false,folderTags:[]};
 try{Object.assign(P,JSON.parse(localStorage.getItem(PK)||'{}'));}catch(e){}
 function applyPrefs(){document.body.classList.toggle('nogray',!P.gray);document.body.classList.toggle('nolink',P.showLink===false);document.body.classList.toggle('nolnum',P.listNum===false);document.body.style.setProperty('--cols',P.cols);}
 function setPref(k,v){P[k]=v;try{localStorage.setItem(PK,JSON.stringify(P));}catch(e){}applyPrefs();}
@@ -529,6 +545,7 @@ function filtered(){
     if(filter.cats.length){const has=c=>(a.tags||[]).includes(c);
       if(filter.tagMode==='and'?!filter.cats.every(has):!filter.cats.some(has))return false;}
     if(!rateOk(a.rating,filter.rating||0))return false;
+    if(filter.folder&&!(a.tags||[]).includes(filter.folder))return false;
     return true;
   }).sort((x,y)=>{
     const byName=(x.name||'').localeCompare(y.name||'');
@@ -537,12 +554,14 @@ function filtered(){
     return byName;});
 }
 
-let lastView=null,enterT=null,rateT=null;
+let lastView=null,enterT=null,rateT=null,lastListHash='';
 function render(){
   const h=location.hash.slice(1);
   let a=null;
   if(h.startsWith('artist-'))a=S.artists.find(x=>x.id===h.slice(7));
-  const view=a?'a:'+a.id:'list';
+  if(!a){let f=null;if(h.startsWith('folder-')){try{f=decodeURIComponent(h.slice(7));}catch(e){}if(!S.tags.includes(f))f=null;}
+    filter.folder=f;lastListHash=f?'#folder-'+encodeURIComponent(f):'';}
+  const view=a?'a:'+a.id:'list:'+(filter.folder||'');
   if(a)renderDetail(a);else renderList();
   if(view!==lastView){
     lastView=view;window.scrollTo(0,0);
@@ -561,19 +580,7 @@ function renderList(){
       (filter.cats.length?'<b>'+filter.cats.map(esc).join(filter.tagMode==='and'?' + ':' / ')+'</b>'+(filter.cats.length>1?' <i>('+(filter.tagMode==='and'?'all':'any')+')</i>':''):'')+
       (filter.cats.length&&filter.rating?' · ':'')+(filter.rating?'<b>'+(filter.rating===-1?'Unrated':'★ '+(filter.rating===5?'5':filter.rating+'+'))+'</b>':'')+
       '</span><button id="fclr">Clear</button></div>':'')+
-   '<div class="sec"><h2>Artists</h2><span>'+(filter.q||filter.cats.length||filter.rating?list.length+' / ':'')+S.artists.length+'</span></div>'+
-   (S.artists.length===0?
-     '<div class="empty"><h3>Archive is empty</h3><p>Add an artist, set the manga image you remember them by.</p><button class="cta" id="add2">+ Add first artist</button></div>':
-    list.length===0?'<div class="empty"><h3>No match</h3><p>Try another name, tag or rating.</p></div>':
-    P.view==='list'?
-     '<div class="list">'+list.map((a,i)=>{
-       const l=href(a.link);
-       return '<div class="lr" data-id="'+a.id+'" style="--i:'+Math.min(i,12)+'"><div class="lt">'+thumb(a)+'<span class="lnum">'+pad(i+1)+'</span></div><div class="lx"><div class="cname">'+esc(a.name)+'</div><div class="ccat">'+esc((a.tags||[]).join(' · ')||'—')+'</div>'+(+a.rating?starsView(a.rating):'')+'</div>'+(l?'<a class="go" href="'+esc(l)+'" target="_blank" rel="noopener" title="Open link">'+ARR+'</a>':'<span></span>')+'</div>';
-     }).join('')+'</div>':
-     '<div class="grid cols'+P.cols+'">'+list.map((a,i)=>{
-       const l=href(a.link);
-       return '<div class="card" data-id="'+a.id+'" style="--i:'+Math.min(i,12)+'"><div class="thumb"><span class="num">'+pad(i+1)+'</span>'+(+a.rating?'<span class="rb">'+STAR+a.rating+'</span>':'')+(l?'<a class="go" href="'+esc(l)+'" target="_blank" rel="noopener" title="Open link">'+ARR+'</a>':'')+thumb(a)+'</div><div class="cname">'+esc(a.name)+'</div><div class="ccat">'+esc((a.tags||[]).join(' · ')||'—')+'</div></div>';
-     }).join('')+'</div>');
+   listBody(list);
   if(artifact){const n=$('#ntc');if(n)n.remove();}
   const q=$('#q');
   q.oninput=()=>{filter.q=q.value;const p=q.selectionStart;renderList();const n=$('#q');n.focus();n.setSelectionRange(p,p);};
@@ -586,8 +593,71 @@ function renderList(){
   document.querySelectorAll('.chip[data-cat]').forEach(b=>b.onclick=()=>{const c=b.dataset.cat;filter.cats=filter.cats.includes(c)?filter.cats.filter(x=>x!==c):[...filter.cats,c];renderList();});
   const all=document.querySelector('.chip[data-all]');if(all)all.onclick=()=>{filter.cats=[];renderList();};
   document.querySelectorAll('#app [data-id]').forEach(c=>c.onclick=e=>{if(e.target.closest('.go'))return;location.hash='artist-'+c.dataset.id;});
+  document.querySelectorAll('#app [data-folder]').forEach(c=>c.onclick=()=>{location.hash='folder-'+encodeURIComponent(c.dataset.folder);});
+  const fu=$('#fup');if(fu)fu.onclick=()=>{location.hash='';};
   const mo=document.querySelector('.chip[data-more]');if(mo)mo.onclick=()=>{chipsOpen=!chipsOpen;layoutChips();};
   layoutChips();
+}
+
+// grid or list of artist cards (numbers follow the order shown)
+function artistsHTML(list){
+  return (
+    P.view==='list'?
+     '<div class="list">'+list.map((a,i)=>{
+       const l=href(a.link);
+       return '<div class="lr" data-id="'+a.id+'" style="--i:'+Math.min(i,12)+'"><div class="lt">'+thumb(a)+'<span class="lnum">'+pad(i+1)+'</span></div><div class="lx"><div class="cname">'+esc(a.name)+'</div><div class="ccat">'+esc((a.tags||[]).join(' · ')||'—')+'</div>'+(+a.rating?starsView(a.rating):'')+'</div>'+(l?'<a class="go" href="'+esc(l)+'" target="_blank" rel="noopener" title="Open link">'+ARR+'</a>':'<span></span>')+'</div>';
+     }).join('')+'</div>':
+     '<div class="grid cols'+P.cols+'">'+list.map((a,i)=>{
+       const l=href(a.link);
+       return '<div class="card" data-id="'+a.id+'" style="--i:'+Math.min(i,12)+'"><div class="thumb"><span class="num">'+pad(i+1)+'</span>'+(+a.rating?'<span class="rb">'+STAR+a.rating+'</span>':'')+(l?'<a class="go" href="'+esc(l)+'" target="_blank" rel="noopener" title="Open link">'+ARR+'</a>':'')+thumb(a)+'</div><div class="cname">'+esc(a.name)+'</div><div class="ccat">'+esc((a.tags||[]).join(' · ')||'—')+'</div></div>';
+     }).join('')+'</div>');
+}
+
+// ---- folder view: chosen tags shown as folders on the home screen ----
+const FOLDER_ICO='<svg class="fico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="miter" aria-hidden="true"><path d="M2.5 5h7l2 2.5h10V19h-19z"/></svg>';
+function folderTags(){return P.folders?S.tags.filter(t=>(P.folderTags||[]).includes(t)):[];}
+function foldersHTML(tags){
+  const inTag=t=>S.artists.filter(a=>(a.tags||[]).includes(t));
+  const mosaic=t=>{const as=inTag(t).slice(-4).reverse();let h='';for(let k=0;k<4;k++)h+='<div class="mc">'+(as[k]?thumb(as[k]):'')+'</div>';return h;};
+  if(P.view==='list')return '<div class="list">'+tags.map((t,i)=>{const n=inTag(t).length;
+    return '<div class="lr fold" data-folder="'+esc(t)+'" style="--i:'+Math.min(i,12)+'"><div class="lt fmos">'+mosaic(t)+'</div><div class="lx"><div class="cname">'+FOLDER_ICO+esc(t)+'</div><div class="ccat">'+n+' artist'+(n===1?'':'s')+'</div></div><span class="fchev">'+ARR_R+'</span></div>';}).join('')+'</div>';
+  return '<div class="grid cols'+P.cols+'">'+tags.map((t,i)=>{const n=inTag(t).length;
+    return '<div class="card fold" data-folder="'+esc(t)+'" style="--i:'+Math.min(i,12)+'"><div class="thumb fmos">'+mosaic(t)+'<span class="fcnt">'+n+'</span></div><div class="cname">'+FOLDER_ICO+esc(t)+'</div><div class="ccat">'+n+' artist'+(n===1?'':'s')+'</div></div>';}).join('')+'</div>';
+}
+function listBody(list){
+  const filtering=!!(filter.q||filter.cats.length||filter.rating);
+  if(filter.folder){
+    return '<button class="back fup" id="fup">'+ARL+'All folders</button>'+
+      '<div class="sec"><h2>'+FOLDER_ICO+esc(filter.folder)+'</h2><span>'+list.length+'</span></div>'+
+      (list.length?artistsHTML(list):'<div class="empty"><h3>'+(filtering?'No match':'Empty folder')+'</h3><p>'+(filtering?'Nothing in this folder matches.':'No artists have this tag yet.')+'</p></div>');
+  }
+  const ft=folderTags();
+  if(ft.length&&!filtering&&S.artists.length){
+    const others=list.filter(a=>!(a.tags||[]).some(t=>ft.includes(t)));
+    return '<div class="sec"><h2>Folders</h2><span>'+ft.length+'</span></div>'+foldersHTML(ft)+
+      '<div class="sec"><h2>Artists</h2><span>'+others.length+'</span></div>'+
+      (others.length?artistsHTML(others):'<p class="hint fnone">Every artist is inside a folder.</p>');
+  }
+  return '<div class="sec"><h2>Artists</h2><span>'+(filtering?list.length+' / ':'')+S.artists.length+'</span></div>'+
+   (S.artists.length===0?
+     '<div class="empty"><h3>Archive is empty</h3><p>Add an artist, set the manga image you remember them by.</p><button class="cta" id="add2">+ Add first artist</button></div>':
+    list.length===0?'<div class="empty"><h3>No match</h3><p>Try another name, tag or rating.</p></div>':artistsHTML(list));
+}
+function openFolderPicker(){
+  const close=modal('Folders','<div class="fsheet"><div class="field"><label class="lbl">Tags shown as folders</label><div class="chips" id="fpk"></div>'+
+    '<span class="hint" style="margin-top:10px;display:block">Selected tags appear as folders on the home screen. Other tags are ignored.</span></div></div>',
+    '<div class="mf"><button id="fpnone">Clear</button><button class="pri" id="fpdone">Done</button></div>');
+  const draw=()=>{
+    const sel=P.folderTags||[];
+    $('#fpk').innerHTML=S.tags.length?S.tags.map(t=>'<button class="chip'+(sel.includes(t)?' on':'')+'" data-fpt="'+esc(t)+'">'+(sel.includes(t)?FOLDER_ICO:'')+esc(t)+'</button>').join(''):
+      '<button class="chip ghost" id="fpadd">+ Add tags first</button>';
+    document.querySelectorAll('[data-fpt]').forEach(b=>b.onclick=()=>{const t=b.dataset.fpt,cur=P.folderTags||[];
+      setPref('folderTags',cur.includes(t)?cur.filter(x=>x!==t):[...cur,t]);draw();render();});
+    const fa=$('#fpadd');if(fa)fa.onclick=()=>{close();openCats();};
+  };
+  draw();
+  $('#fpnone').onclick=()=>{setPref('folderTags',[]);draw();render();};
+  $('#fpdone').onclick=close;
 }
 
 // Show at most MAX_CHIP_ROWS rows of filter chips; the last slot becomes "+N more".
@@ -625,7 +695,7 @@ function renderDetail(a){
         '<button class="wbtn" data-w="'+i+'" title="Edit work"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square" stroke-linejoin="miter"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13 7l4 4"/></svg></button></div>';}).join('')+'</div>'
      :'<div class="nowork">No works added yet.</div>')+
    '</div>';
-  $('#back').onclick=()=>{location.hash='';};
+  $('#back').onclick=()=>{location.hash=lastListHash||'';};
   $('#dice2').onclick=()=>rollDice($('#dice2'));
   $('#edit').onclick=()=>openEditArtist(a);
   $('#dimg').onclick=()=>{if(!(a.images||[]).length)return openEditArtist(a);openGallery(a.images,a.images.length-1);};
@@ -897,6 +967,8 @@ function openSettings(){
     '<div class="field"><label class="lbl">Display</label><button class="srow" id="sgray"><span>Grayscale images<small>Show artist images in black &amp; white</small></span><span class="tg'+(P.gray?' on':'')+'"></span></button>'+
     '<button class="srow" id="slink"><span>Link icon on cards<small>Show the open-link button on each artist</small></span><span class="tg'+(P.showLink!==false?' on':'')+'"></span></button>'+
     '<button class="srow" id="slnum"><span>Show numbers<small>Each artist\'s number in the top-left of its image</small></span><span class="tg'+(P.listNum!==false?' on':'')+'"></span></button></div>'+
+    '<div class="field"><label class="lbl">Folders</label><button class="srow" id="sfold"><span>Folder view<small>Show chosen tags as folders on the home screen</small></span><span class="tg'+(P.folders?' on':'')+'"></span></button>'+
+    '<button class="srow" id="sfpick"'+(P.folders?'':' style="display:none"')+'><span>Choose folders<small id="sfcount">'+folderTags().length+' of '+S.tags.length+' tags</small></span>'+ARR_R+'</button></div>'+
     '<div class="field"><label class="lbl">Security</label><button class="srow" id="slock"><span>App lock<small>Ask for a 4-digit PIN when the app opens</small></span><span class="tg'+(getLock()?' on':'')+'"></span></button>'+
     '<button class="srow" id="spin"'+(getLock()?'':' style="display:none"')+'><span>Change PIN</span>'+ARR_R+'</button></div>'+
     '<div class="field"><label class="lbl">Tags</label><button class="srow" id="stags"><span>Manage tags<small>'+S.tags.length+' tags · add, rename, delete</small></span>'+ARR_R+'</button></div>'+
@@ -904,6 +976,10 @@ function openSettings(){
   document.querySelectorAll('.seg [data-l]').forEach(b=>b.onclick=()=>{
     const v=b.dataset.l;if(v==='list')setPref('view','list');else{setPref('cols',+v.slice(1));setPref('view','grid');}
     document.querySelectorAll('.seg [data-l]').forEach(x=>x.classList.toggle('on',x===b));render();});
+  $('#sfold').onclick=()=>{setPref('folders',!P.folders);$('#sfold .tg').classList.toggle('on',P.folders);$('#sfpick').style.display=P.folders?'':'none';
+    if(!P.folders&&filter.folder)location.hash='';render();
+    if(P.folders&&!folderTags().length){close();openFolderPicker();}};
+  $('#sfpick').onclick=()=>{close();openFolderPicker();};
   $('#slnum').onclick=()=>{setPref('listNum',P.listNum===false);$('#slnum .tg').classList.toggle('on',P.listNum!==false);};
   $('#slink').onclick=()=>{setPref('showLink',P.showLink===false);$('#slink .tg').classList.toggle('on',P.showLink!==false);};
   $('#sgray').onclick=()=>{setPref('gray',!P.gray);$('#sgray .tg').classList.toggle('on',P.gray);};
@@ -1102,6 +1178,7 @@ function openCats(){
     const map={};keep.forEach(c=>{if(c.old)map[c.old]=c.name;});
     S.artists.forEach(a=>{a.tags=[...new Set((a.tags||[]).filter(c=>c in map).map(c=>map[c]))];});
     S.tags=keep.map(c=>c.name);
+    setPref('folderTags',(P.folderTags||[]).filter(t=>t in map).map(t=>map[t]));
     filter.cats=filter.cats.filter(c=>c in map).map(c=>map[c]);
     close();save('Tags saved');
   };
